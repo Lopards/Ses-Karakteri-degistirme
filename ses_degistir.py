@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt # ->görselleştirme
 from scipy.io import wavfile #dosya
-from scipy.signal import resample, butter, filtfilt #filtreler
+from scipy.signal import resample, butter, filtfilt #tonlar icin
 
 
 
