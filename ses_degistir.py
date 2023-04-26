@@ -15,7 +15,7 @@ class Ses_Degistir:
             cutoff_freq = 600.0
 
             cutoff = cutoff_freq / self.nyquist_freq #Kesme frekansı nyquist frekansa bölünerek kesme frekansı hesaplan
-            b, a = scipy.signal.butter(self.order, cutoff, btype="high") #butterworth filtresi
+            b, a = scipy.signal.butter(self.order, cutoff, btype="low") #butterworth filtresi
             filtreli_data = scipy.signal.filtfilt(b, a, self.data) # filtreli ses dosyasını elde et
             return filtreli_data
 
@@ -26,7 +26,7 @@ class Ses_Degistir:
             cutoff_freq = 2500.0
 
             cutoff = cutoff_freq / self.nyquist_freq
-            b, a = scipy.signal.butter(self.order, cutoff, btype="low")
+            b, a = scipy.signal.butter(self.order, cutoff, btype="high")
             filtreli_data = scipy.signal.filtfilt(b, a, self.data)
             return filtreli_data
         else:
