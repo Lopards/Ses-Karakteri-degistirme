@@ -2,4 +2,8 @@
 
 python ile ses karakterini nesne tabanlı bir şekilde değiştirme 
 
-arayüz eklendi 
+ses değiştirme programına: 
+
++arayüz eklendi
+
+ses efektlerine ekleme-düzeltme daha sonra yapılacak
