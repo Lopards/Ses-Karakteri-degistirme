@@ -15,9 +15,6 @@ class Ses_Degistir:
     def __init__(self, dosya_yolu):
      self.dosya_yolu = dosya_yolu
 
-    """
-    pitch   : curtain chosn acording to the selection: 1(male), 2(female)
-    """
 
     def pitch_shift(self, pitch):
         
@@ -124,25 +121,6 @@ S2 = Radiobutton(frame_alt_sol, text="Kadın sesi", variable=var,
 S2.pack(padx=15, pady=5, anchor=NW)
 
            
-
-#chatgpt
-
-def apply_child_effect(dosya_yolu):
-            samplerate, data = wav.read(dosya_yolu)
-            nyquist_freq = 0.2 * samplerate  # Nyquist frekansı hesapla
-            order = 9
-            cutoff_freq = 600.0
-
-            # Kesme frekansı nyquist frekansa bölünerek kesme frekansı hesaplan
-            cutoff = cutoff_freq /nyquist_freq
-            b, a = scipy.signal.butter(
-                order, cutoff, btype="low")  # butterworth filtresi
-            filtreli_data = scipy.signal.filtfilt(
-                b, a, data)  # filtreli ses dosyasını elde et
-            return filtreli_data
-
-
-
 ## part3###
 
 def calistir():
