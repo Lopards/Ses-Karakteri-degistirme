@@ -10,18 +10,29 @@ from tkinter import filedialog as fd
 from tkinter.ttk import Combobox
 from tkinter.messagebox import showinfo
 
-dosya_yolu = 'C:/rise_teknoloji/deneme.wav'
+
+def dosya_sec():
+    dosya_yolu = fd.askopenfilename(initialdir="/", title="Dosya Seç",
+                                    filetypes=(("Text files", "*.txt*"), ("all files", "*.*")))
+    dosya_yolu_kiti.config(text="Dosya YOLU = " + dosya_yolu)
+
+
 class Ses_Degistir:
     def __init__(self, dosya_yolu):
      self.dosya_yolu = dosya_yolu
+     self.samplerate=None
+     self.data=None
+     self.nyquist_freq=None
+     self.order=None
 
+   
 
     def pitch_shift(self, pitch):
         
         #Eğer 1 (erkek) secilirse sesi kadın sesine dondurmeye calış ve filtrelenmiş datayı döndür
         if pitch == 1:  # Erkek sesi
             # dosya yolu verilen ses dosyası oku
-            self.samplerate, self.data = wav.read(dosya_yolu)
+            self.samplerate, self.data = wav.read(self.dosya_yolu)
             self.nyquist_freq = 0.2 * self.samplerate  # Nyquist frekansı hesapla
             self.order = 9
             cutoff_freq = 600.0
@@ -37,7 +48,7 @@ class Ses_Degistir:
 
 #Eğer 2 (kadin) secilirse sesi kadın sesine dondurmeye calış ve filtrelenmiş datayı döndür
         elif pitch == 2:  # Kadın sesi
-            self.samplerate, self.data = wav.read(dosya_yolu)
+            self.samplerate, self.data = wav.read(self.dosya_yolu)
             self.nyquist_freq = 1.0 * self.samplerate
             self.order = 5
             cutoff_freq = 2500.0
@@ -46,10 +57,7 @@ class Ses_Degistir:
             b, a = scipy.signal.butter(self.order, cutoff, btype="high")
             filtreli_data = scipy.signal.filtfilt(b, a, self.data)
             return filtreli_data
-        else:
-            print("Hatali giriş! Lütfen 1 veya 2 tuşlarina basın.")
-            return
-
+       
         # cutoff = cutoff_freq / self.nyquist_freq
         # b, a = scipy.signal.butter(self.order, cutoff, btype="high")
         # filtreli_data = scipy.signal.filtfilt(b, a, self.data)
@@ -61,12 +69,14 @@ class Ses_Degistir:
 
 
 master = Tk()
+master.title("Ses degistirme Programı")
 Canvas = Canvas(master, height=450, width=750)
 Canvas.pack()
-master.title("Ses degistirme Programı")
 # pack
 # place
 # grid
+
+
 
 frame_ust = Frame(master, bg='#add8e6')  # renk
 # mavi bölgenin yerini konumladım
@@ -78,10 +88,7 @@ frame_alt_sol.place(relx=0.1, rely=0.21, relwidth=0.23, relheight=0.66)
 frame_alt_sag = Frame(master, bg='#add8e6')  # renk
 frame_alt_sag.place(relx=0.34, rely=0.21, relwidth=0.51, relheight=0.66)
 
-def dosya_sec():
-    dosya_yolu = fd.askopenfilename(initialdir="/", title="Dosya Seç",
-                                    filetypes=(("Text files", "*.txt*"), ("all files", "*.*")))
-    dosya_yolu_kiti.config(text="Dosya YOLU = " + dosya_yolu)
+
 
 dosya_yolu_kiti = Label(frame_ust, bg='#add8e6',
                         text="Dosya YOLU = ", font="Verdana 10 bold")
@@ -121,6 +128,11 @@ S2 = Radiobutton(frame_alt_sol, text="Kadın sesi", variable=var,
 S2.pack(padx=15, pady=5, anchor=NW)
 
            
+
+
+
+
+
 ## part3###
 
 def calistir():
@@ -140,28 +152,7 @@ def calistir():
         yeni_dosya = 'yeni_ses.wav'
         ses_degistirici.save_wav(yeni_dosya, filtreli_data)
     
-    """
-    # Dosya yolu alınır
-    dosya_yolu = dosya_yolu_kiti.cget("text").replace("Dosya YOLU = ", "")
-    # Hangi sesin seçildiği alınır
-    secim = var.get()
-    if secim == 1:
-       
-    # Çocuk sesi seçildi
-        data = apply_child_effect(dosya_yolu)
-        wavfile.write("child_voice.wav",  data)
-        showinfo("Başarılı", "Dosya çocuk sesine çevrildi.")
 
-    # Çocuk sesi seçildi
-    # Burada dosyanın çocuk sesine çevrilmesi işlemi yapılabilir
-        
-        
-    elif secim == 2:
-    # Kadın sesi seçildi
-    # Burada dosyanın kadın sesine çevrilmesi işlemi yapılabilir
-        showinfo("Başarılı", "Dosya kadın sesine çevrildi.")
-        pass
-"""
 
 
 #    Bu fonksiyonu çalıştırmak için, "Çalıştır" butonuna bir command parametresi eklemeniz gerekiyor:
