@@ -153,19 +153,6 @@ def calistir():
         ses_degistirici.save_wav(yeni_dosya, filtreli_data)
     
 
-
-
-#    Bu fonksiyonu çalıştırmak için, "Çalıştır" butonuna bir command parametresi eklemeniz gerekiyor:
-
-    calistir_button = Button(frame_alt_sol, text="Çalıştır", command=calistir)
-    calistir_button.pack(anchor=S)
-    
-    
-    
-    
-    
-
-
         
 Label(frame_alt_sag, text="Ses diagramı",
       bg='#add8e6', font="Verdan 12 bold").pack()
