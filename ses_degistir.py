@@ -136,14 +136,24 @@ S2.pack(padx=15, pady=5, anchor=NW)
 ## part3###
 
 def calistir():
-    
     dosya_yolu = dosya_yolu_kiti.cget("text").replace("Dosya YOLU = ", "")
     secim = var.get()
+    sonMesaj = ""
     
-    showinfo(dosya_yolu, secim)
+    if dosya_yolu == "":
+        showinfo("Hata","Lutfen Dosya seçiniz.")
     
-    
-    ses_degistirici = Ses_Degistir(dosya_yolu)
+    else:
+             if secim==1:
+                 sonMesaj+="çocuk sesi sisteme kaydedildi."
+                 showinfo("başarılı islem",sonMesaj) #başlık,mesaj
+                 
+             elif secim==2:
+                sonMesaj+="kadın sesi sisteme kaydedildi."
+                showinfo("başarılı islem",sonMesaj)   
+                
+             else:
+                 showinfo("Hata","Lutfen bir secim yapiniz")
     
 
     filtreli_data = ses_degistirici.pitch_shift(secim)
