@@ -70,6 +70,14 @@ def calistir():
         elif secim == 2:
             sonMesaj += "kadın sesi sisteme kaydedildi."
             showinfo("başarılı islem", sonMesaj)
+            
+        elif secim==3:
+            try:
+                Women.women()
+                sonMesaj+="kadin sesine dönüştürüldü."
+                showinfo("başarılı işlem",sonMesaj)
+            except:
+                showinfo("hata","bir hata oluştu")
 
         else:
             showinfo("Hata", "Lutfen bir secim yapiniz")
