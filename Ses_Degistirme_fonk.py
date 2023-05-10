@@ -1,12 +1,8 @@
 import scipy.io.wavfile as wav
 import numpy as np
 import scipy.signal
-import tkinter as tk
-import matplotlib.pyplot as plt 
-import sounddevice as sd
-import soundfile as sf
 import numpy as np 
-import sys
+
 
 class Ses_Degistir:
     def __init__(self, dosya_yolu):
