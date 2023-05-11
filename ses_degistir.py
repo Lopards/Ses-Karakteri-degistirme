@@ -7,6 +7,7 @@ from tkinter import messagebox
 
 import Ses_Degistirme_fonk
 import Ses_kaydedici
+import Women
 
 
 def dosya_sec():
