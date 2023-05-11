@@ -14,7 +14,7 @@ def women():
 
     pitch_tier = call(manipulation, "Extract pitch tier")
 
-    call(pitch_tier, "Multiply frequencies", sound.xmin, sound.xmax, 2)
+    call(pitch_tier, "Multiply frequencies", sound.xmin, sound.xmax, 3)
 
     call([pitch_tier, manipulation], "Replace pitch tier")
     sound_octave_up = call(manipulation, "Get resynthesis (overlap-add)")
