@@ -44,6 +44,9 @@ dosya_yolu_kiti.pack(padx=10, side=LEFT)
 dosya_sec_button = Button(frame_ustbolge, text="Dosya Seç", command=dosya_sec)
 dosya_sec_button.pack(padx=10, side=LEFT)
 
+metin_button= Button(frame_altSag,text="metin gir",command=METIN_YERI.metin)
+metin_button.pack(padx=15, side=LEFT)
+
 
 Label(frame_altSol, text="Hangi sesi istiyorsunuz?", bg="#0080FF",
       font="Verdan 9 bold").pack(padx=10, pady=10, anchor=NW)
