@@ -1,10 +1,3 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, QTextEdit
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import pyqtSlot
-from gtts import gTTS
-from playsound import playsound
-
- 
 import tkinter as tk
 from gtts import gTTS
 from playsound import playsound
