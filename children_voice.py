@@ -4,8 +4,8 @@ from IPython.display import Audio
 
 
     
-def children():
-    sound = parselmouth.Sound("kayit.wav")
+def children(dosya):
+    sound = parselmouth.Sound(dosya)
 
     Audio(data=sound.values, rate=sound.sampling_frequency)
 
