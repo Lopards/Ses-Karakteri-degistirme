@@ -3,7 +3,7 @@ from parselmouth.praat import call
 from IPython.display import Audio
 
 def men(dosya):
-    sound = parselmouth.Sound("kayit.wav")
+    sound = parselmouth.Sound(dosya)
 
     Audio(data=sound.values, rate=sound.sampling_frequency)
 
