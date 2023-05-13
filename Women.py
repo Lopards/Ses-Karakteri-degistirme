@@ -2,7 +2,7 @@ import parselmouth
 from parselmouth.praat import call
 from IPython.display import Audio
 
-def women():
+def women(dosya):
     sound = parselmouth.Sound("kayit.wav")
 
     Audio(data=sound.values, rate=sound.sampling_frequency)
