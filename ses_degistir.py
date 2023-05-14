@@ -9,7 +9,10 @@ from gtts import gTTS
 
 import tkinter as tk
 import os
+import librosa
+import numpy as np
 
+import Ses_tanima
 import Ses_kaydedici
 import Women
 import Men_voice
@@ -20,7 +23,7 @@ def dosya_sec():
     dosya_yolu = fd.askopenfilename(initialdir="/", title="Dosya Seç",
                                     filetypes=(("Text files", "*.txt*"), ("all files", "*.*")))
     dosya_yolu_kiti.config(text="Dosya YOLU = " + dosya_yolu)
-    
+  
 
 arayuz = Tk()
 arayuz.title = "Ses Degistime programi"
@@ -37,15 +40,15 @@ frame_altSag = Frame(arayuz, bg="#0080FF")
 frame_altSag.place(relx=0.47, rely=0.21, relwidth=0.38, relheight=0.66)
 
 
-##########
+
 # frame_altsag içerisine metin giriş alanı (text_alanı) ekleme
 text_alani = tk.Text(frame_altSag, height=6, width=40)
 text_alani.pack(side="top", padx=5, pady=5)
 
-
+# Metni kaydetme butonu (kaydet_butonu)
 def metni_kaydet():
     metin = text_alani.get("1.0", "end-1c")
-    tarih = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")# dosya adını kaydedildiği vakite göre adlandırıyor
+    tarih = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     dosya_adi = f"metin_{tarih}.txt"
     with open(dosya_adi, "w", encoding="utf-8") as dosya:
         dosya.write(metin)
@@ -53,18 +56,20 @@ def metni_kaydet():
 kaydet_butonu = tk.Button(frame_altSag, text="Metni Kaydet", command=metni_kaydet)
 kaydet_butonu.pack(side="top", padx=5, pady=5)
 
-
+# Metni okuma butonu (okuma_butonu)
 def metni_oku():
     metin = text_alani.get("1.0", "end-1c")
     ses = gTTS(text=metin, lang="tr")
     ses.save("ses.wav")
     os.system("start ses.wav")
-    
+    #os.remove("ses.wav")
     
 okuma_butonu = tk.Button(frame_altSag, text="Metni Oku", command=metni_oku)
 okuma_butonu.pack(side="top", padx=5, pady=5)
 
-###########
+
+
+
 
 
 
@@ -81,6 +86,10 @@ dosya_sec_button.pack(padx=10, side=LEFT)
 seskayitDurdur_button = Button(
     frame_ustbolge, text="Kayıt başlat- Durdur", command=Ses_kaydedici.SoundRecorderGUI)
 seskayitDurdur_button.pack(padx=15, pady=10, side=RIGHT)
+
+
+ses_tanimaButton=Button(frame_altSag,text="Ses sınıflandırıcı",command=Ses_tanima.Ses())
+ses_tanimaButton.pack(padx=15, pady=10, side=RIGHT)
 
 
 Label(frame_altSol, text="Hangi sesi istiyorsunuz?", bg="#0080FF",
@@ -113,6 +122,7 @@ def calistir():
     else:
         if secim == 1:
             try:
+                
                 Men_voice.men(dosya_yolu)
                 sonMesaj += "Erkek sesine dönüştürüldü."
                 showinfo("başarılı işlem", sonMesaj)
@@ -140,7 +150,6 @@ def calistir():
             showinfo("Hata", "Lutfen bir secim yapiniz")
 
     
-
 
 calistir_button = Button(frame_altSol, text="Çalıstır", command=calistir)
 calistir_button.pack(anchor=S)
