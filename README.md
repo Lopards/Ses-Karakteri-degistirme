@@ -14,7 +14,10 @@
 
 artık istediğiniz filtreyi deneyebilirsiniz
 
-İleriki güncellemelerde Ses diagramı yapılacaktır
+* **Metin girme yeri**, **Metin okuma ve Metni kaydetme** Butonları eklendi
+* **Ses tanı** Butonu ile artık seslerinizin **sınıflandırmasını** yapabilirsiniz (Kadın sesi mi Erkek sesi mi?)
+
+![WhatsApp Image 2023-05-14 at 23 47 48](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/2f16e604-e087-41f9-93ff-5e8a2da57ec3)
 
 
-![On izleme](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/9304ae42-70bb-4c83-8ac2-94d39783a3eb)
+
