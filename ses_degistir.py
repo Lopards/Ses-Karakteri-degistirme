@@ -88,7 +88,7 @@ seskayitDurdur_button = Button(
 seskayitDurdur_button.pack(padx=15, pady=10, side=RIGHT)
 
 
-ses_tanimaButton=Button(frame_altSag,text="Ses sınıflandırıcı",command=Ses_tanima.Ses())
+ses_tanimaButton=Button(frame_altSag,text="Ses sınıflandırıcı",command=Ses_tanima.SesSiniflandirmaProgrami)
 ses_tanimaButton.pack(padx=15, pady=10, side=RIGHT)
 
 
