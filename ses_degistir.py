@@ -154,7 +154,7 @@ dosya_yolu_kiti.pack(padx=10, side=LEFT)
 
 
 seskayitDurdur_button = Button(
-    frame_ustbolge, text="Kayıt başlat- Durdur", command=Ses_kaydedici.SoundRecorderGUI)
+    frame_ustbolge, text="Kayıt başlat- Durdur", command=Ses_kaydedici.SesKaydedici)
 seskayitDurdur_button.pack(padx=15, pady=10, side=RIGHT)
 
 
