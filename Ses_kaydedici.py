@@ -1,62 +1,64 @@
 import tkinter as tk
-import sounddevice as sd
-import soundfile as sf
+import pyaudio
 import numpy as np
-import sys
+import soundfile as sf
 
-class SoundRecorder:
+class SesKaydedici:
     def __init__(self):
-        self.frames = []
-        self.samplerate = 44100
-        self.channels = 2
-        self.filename = "kayit.wav"
-        
-    def start_recording(self):
-        self.frames = []
-        sd.default.samplerate = self.samplerate
-        sd.default.channels = self.channels
-        sd.default.dtype = "float32"
-        sd.InputStream(callback=self.callback).start()
-        
-    def callback(self, indata, frames, time, status):
-        if status:
-            print(status, file=sys.stderr)
-        self.frames.append(indata.copy())
-        
-    def stop_recording(self):
-        sd.stop()
-        self.save_file()
-        
-    def save_file(self):
-        data = np.concatenate(self.frames, axis=0)
-        sf.write(self.filename, data, self.samplerate)
-        
-
-class SoundRecorderGUI:
-    def __init__(self):
-        self.recorder = SoundRecorder()
-        
         self.root = tk.Tk()
-        self.root.title("Ses Kayıt Arayüzü")
+        self.root.title("Ses Kaydı ve Cinsiyet Ayrımı")
+        self.baslat_buton = tk.Button(self.root, text="Kayıt Al", command=self.kaydi_baslat)
+        self.baslat_buton.pack(side=tk.LEFT)
         
-        self.record_button = tk.Button(self.root, text="Ses Kaydı Başlat", command=self.start_recording)
-        self.record_button.pack()
+        self.durdur_button = tk.Button(self.root, text="Kaydı Durdur", command=self.kaydi_durdur)
+        self.durdur_button.pack(side=tk.LEFT)
         
-        self.stop_button = tk.Button(self.root, text="Ses Kaydını Durdur", command=self.stop_recording, state="disabled")
-        self.stop_button.pack()
+        self.p = pyaudio.PyAudio()
+        self.sample_rate = 44100
+        self.recording = False
+        self.frames = []
+        self.input_device_info = self.p.get_default_input_device_info()
+        self.channels = self.input_device_info['maxInputChannels']
+        self.stream = self.p.open(format=pyaudio.paFloat32,
+                                  channels=self.channels,
+                                  rate=self.sample_rate,
+                                  input=True,
+                                  input_device_index=None,
+                                  stream_callback=self.audio_callback)
         
+    def kaydi_baslat(self):
+        self.recording = True
+        self.frames = []
+        self.stream.start_stream()
+    
+    def kaydi_durdur(self):
+        
+        self.recording = False
+        self.stream.stop_stream()
+        signal = np.concatenate(self.frames)
+        gender = self.classify(signal)
+        result_label = tk.Label(self.root, text=f"Kaydedilen sesin cinsiyeti: {gender}")
+        result_label.pack()
+        
+        output_file = f"kaydedilen_{gender}_ses.wav"
+        sf.write(output_file, signal, self.sample_rate)
+        
+    
+    def audio_callback(self, in_data, frame_count, time_info, status):
+        if self.recording:
+            signal = np.frombuffer(in_data, dtype=np.float32).reshape(-1, self.channels)
+            self.frames.append(signal)
+        return (in_data, pyaudio.paContinue)
+    
+    def classify(self, signal):
+        if np.mean(signal[0]) > np.mean(signal[1]):
+            gender = "Kadın"
+        else:
+            gender = "Erkek"
+        return gender
+    
+    def run(self):
         self.root.mainloop()
-        
-    def start_recording(self):
-        self.recorder.start_recording()
-        self.record_button.config(state="disabled")
-        self.stop_button.config(state="normal")
-        
-    def stop_recording(self):
-        self.recorder.stop_recording()
-        self.record_button.config(state="normal")
-        self.stop_button.config(state="disabled")
 
-       
 
 
