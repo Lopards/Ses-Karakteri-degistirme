@@ -15,9 +15,12 @@
 artık istediğiniz filtreyi deneyebilirsiniz
 
 * **Metin girme yeri**, **Metin okuma ve Metni kaydetme** Butonları eklendi
-* **Ses tanı** Butonu ile artık seslerinizin **sınıflandırmasını** yapabilirsiniz (Kadın sesi mi Erkek sesi mi?)
+* **Ses tanı** Butonu ile artık seslerinizin **sınıflandırmasını** yapabilirsiniz (Kadın sesi mi Erkek sesi mi?) - artık Anlık olarak tepki verecek.
+---
+* sesi anlık olarak erkek sesine dönüştüren buton eklendi.
 
-![WhatsApp Image 2023-05-14 at 23 47 48](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/2f16e604-e087-41f9-93ff-5e8a2da57ec3)
+
+![WhatsApp Image 2023-05-23 at 17 40 34](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/28c44bef-008f-413e-9c8c-bb9f966083db)
 
 
 
