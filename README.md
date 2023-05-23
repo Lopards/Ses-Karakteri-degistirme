@@ -10,7 +10,7 @@
 
 * yeni eklenen güncelleme ile şu anda **-Kadın -Çocuk- Erkek-** sesleri yapabiliyorsunuz.
 
-* Kayıt alarak yapmak istiyorsanız-> kayıt al tuşu -> Kaydı başlat- Kaydı Durdur -> dosya seç -> **Kayit.wav** dosyasını seçin
+* Kayıt alarak yapmak istiyorsanız-> kayıt al tuşu -> Kaydı başlat- Kaydı Durdur -> dosya seç -> **kaydedilen_(Erkek-Kadin)_Ses.wav** dosyasını seçin
 
 artık istediğiniz filtreyi deneyebilirsiniz
 
