@@ -12,6 +12,7 @@ import os
 import librosa
 import numpy as np
 
+import Anlik_ses_degisim
 import Ses_kaydedici
 import Women
 import Men_voice
@@ -25,12 +26,7 @@ def select_audio_file():
     
     
 
-"""""
-def run_function(file_path):
-    # Seçilen dosya yoluyla bir işlevi çalıştırın
-   run= classify(file_path)
-   run
- """  
+
    
 
 def classify(filename):
@@ -157,6 +153,9 @@ seskayitDurdur_button = Button(
     frame_ustbolge, text="Kayıt başlat- Durdur", command=Ses_kaydedici.SesKaydedici)
 seskayitDurdur_button.pack(padx=15, pady=10, side=RIGHT)
 
+
+real_time = Button(frame_altSol, text="Anında ses değişimi (erkek)",command= lambda: Anlik_ses_degisim.Uygulama(root))
+real_time.pack(pady=45,side = BOTTOM)
 
 
 # Dosya seçme düğmesini 
