@@ -4,7 +4,7 @@ import pyaudio
 import numpy as np
 from scipy import signal
 import soundfile as sf
-import librosa
+
 
 class SesDegisim:
     def __init__(self):
@@ -71,8 +71,8 @@ class SesDegisim:
             self.hata_mesaji()
 
     def classify_gender(self, audio_data):
-        sf.write("temp.wav", audio_data, self.RATE)
-        signal, _ = librosa.load("temp.wav", sr=self.RATE)
+        sf.write("temp.wav", audio_data, self.RATE, format='WAV', subtype='FLOAT')
+        signal, x = sf.read("temp.wav")
         if np.mean(signal[0]) > np.mean(signal[1]):
             gender = "Kadın"
         else:
