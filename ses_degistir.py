@@ -154,8 +154,12 @@ seskayitDurdur_button = Button(
 seskayitDurdur_button.pack(padx=15, pady=10, side=RIGHT)
 
 
-real_time = Button(frame_altSol, text="Anında ses değişimi (erkek)",command= lambda: Anlik_ses_degisim.Uygulama(root))
-real_time.pack(pady=45,side = BOTTOM)
+real_time_erkek = Button(frame_altSol, text="Anında ses değişimi (erkek)", command=lambda: Anlik_ses_degisim.SesDegisim().run())
+real_time_erkek.pack(pady=20, side=BOTTOM)
+
+
+real_time_kadin = Button(frame_altSol, text="Anında ses değişimi (kadin)",command= lambda: anlik_ses_kadin.SesDegisim().run())
+real_time_kadin.pack(pady=20,side = BOTTOM)
 
 
 # Dosya seçme düğmesini 
