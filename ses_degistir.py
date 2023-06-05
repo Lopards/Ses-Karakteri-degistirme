@@ -1,17 +1,18 @@
-from tkinter.filedialog import askopenfilename
+
 from tkinter import *
 from tkinter.messagebox import showinfo
 from datetime import datetime
 from gtts import gTTS
 from tkinter import filedialog as fd
-
 import soundfile as sf
-import librosa
+
+
+
 import tkinter as tk
 import os
-import librosa
 import numpy as np
 
+import anlik_ses_kadin
 import Anlik_ses_degisim
 import Ses_kaydedici
 import Women
@@ -27,13 +28,12 @@ def select_audio_file():
     
 
 
-   
-
 def classify(filename):
     
-    signal, rate = librosa.load(filename, sr=None, mono=False)
-    # Ses sinyalini analiz etmek ve sonucu etiketlemek için gereken işlemler burada yapılacak.
+    signal, sample_rate = sf.read(filename)
+    signal = np.transpose(signal) # Sinyali transpoze et (kanalları ayır)
 
+    # Ses sinyalini analiz etmek ve sonucu etiketlemek için gereken işlemler burada yapılacak.
     if np.mean(signal[0]) > np.mean(signal[1]):
         gender = "Kadın"
     else:
@@ -41,18 +41,34 @@ def classify(filename):
 
     return gender
 
+import socket
+
+def send_audio_to_server(filename):
+    server_ip = "SERVER_IP_ADDRESS"  # Sunucunun IP adresini buraya yazın
+    server_port = 1234  # Sunucunun port numarasını buraya yazın
+
+    # Ses dosyasını oku
+    with open(filename, "rb") as file:
+        audio_data = file.read()
+
+    # Sunucuya bağlan ve ses dosyasını gönder
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((server_ip, server_port))
+        s.sendall(audio_data)
+
+    print("Ses dosyası sunucuya gönderildi.")
 
 
 def on_select():
     # Seçili radyo düğmesi değerini alın
     filename = dosya_yolu_kiti.cget("text").replace("Dosya YOLU = ", "")
-    selected_option = option.get()
+    secim = option.get()
     sonmesaj=""
     
     if filename =="":
         showinfo("hata","Dosya seciniz")
     else:
-        if selected_option==1:
+        if secim==1:
             try:
                 gender=classify(filename)
                 if gender=="Erkek":
@@ -64,7 +80,7 @@ def on_select():
             except:
                     showinfo("hata","beklenmedik bir hata oldu...")   
         
-        elif  selected_option == 2:
+        elif  secim == 2:
             try:
                 gender=classify(filename)
                 if gender=="Kadın":
@@ -76,7 +92,7 @@ def on_select():
             except:
                     showinfo("hata","beklenmedik bir hata oldu...") 
         
-        elif selected_option == 3:
+        elif secim == 3:
             try:
                 children_voice.children(filename)
                 sonmesaj += "Çouck sesine dönüştürüldü."
@@ -153,6 +169,14 @@ seskayitDurdur_button = Button(
     frame_ustbolge, text="Kayıt başlat- Durdur", command=Ses_kaydedici.SesKaydedici)
 seskayitDurdur_button.pack(padx=15, pady=10, side=RIGHT)
 
+#ses_gaydet=Button(frame_ustbolge,text="Kayıt al",command=Ses_Tanimali_kayit.SoundRecorder)
+#ses_gaydet.pack(padx=15, pady=10, side=RIGHT)
+
+
+
+
+
+
 
 real_time_erkek = Button(frame_altSol, text="Anında ses değişimi (erkek)", command=lambda: Anlik_ses_degisim.SesDegisim().run())
 real_time_erkek.pack(pady=20, side=BOTTOM)
@@ -160,6 +184,7 @@ real_time_erkek.pack(pady=20, side=BOTTOM)
 
 real_time_kadin = Button(frame_altSol, text="Anında ses değişimi (kadin)",command= lambda: anlik_ses_kadin.SesDegisim().run())
 real_time_kadin.pack(pady=20,side = BOTTOM)
+
 
 
 # Dosya seçme düğmesini 
