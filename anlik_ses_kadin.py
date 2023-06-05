@@ -5,7 +5,6 @@ import numpy as np
 from scipy import signal
 import soundfile as sf
 
-
 class SesDegisim:
     def __init__(self):
         self.root = tk.Tk()
@@ -21,17 +20,19 @@ class SesDegisim:
         self.CHANNELS = 1
         self.RATE = 44100
         self.PITCH_SHIFT_FACTOR = 0.8
+        self.DELAY_SECONDS = 4
 
         self.p = pyaudio.PyAudio()
         self.stream = None
         self.is_running = False
         self.is_paused = False
+        self.is_gender_change_paused = False  # Yeni eklenen değişken
         self.thread = None
 
         self.root.bind('<Key>', self.klavye_kontrol)
 
     def klavye_kontrol(self, event):
-        if event.char == 'q':
+        if event.char == 'q':  # q ile duraklat/devam et işlemi
             if self.is_running and not self.is_paused:
                 self.is_paused = True
             elif self.is_running and self.is_paused:
@@ -50,6 +51,7 @@ class SesDegisim:
 
     def ses_degisimi_durdur(self):
         self.is_running = False
+        self.is_gender_change_paused = False  # Yeni eklenen değişkenin sıfırlanması
         self.thread.join()
         if self.stream is not None:
             self.stream.stop_stream()
@@ -66,42 +68,39 @@ class SesDegisim:
                                   frames_per_buffer=self.CHUNK)
 
         kaydedilen_list = []
-        for a in range(int(self.RATE / self.CHUNK * 2)):
+        while self.is_running:
             input_data = self.stream.read(self.CHUNK)
             kaydedilen_list.append(input_data)
+            audio_data = np.frombuffer(input_data, dtype=np.float32) * 0.3
 
-        kaydedilen_sinyal = np.frombuffer(b''.join(kaydedilen_list), dtype=np.float32)
-        cinsiyet = self.classify_gender(kaydedilen_sinyal)
+            if len(kaydedilen_list) > int(self.RATE / self.CHUNK * self.DELAY_SECONDS):
+                kaydedilen_sinyal = np.frombuffer(b''.join(kaydedilen_list[-int(self.RATE / self.CHUNK * self.DELAY_SECONDS):]), dtype=np.float32)
+                cinsiyet = self.classify_gender(kaydedilen_sinyal)
 
-        if cinsiyet == "Erkek":
-            self.stream.start_stream()
-            while self.is_running:
-                input_data = self.stream.read(self.CHUNK)
-                audio_data = np.frombuffer(input_data, dtype=np.float32) * 1.0
+                if cinsiyet == "Erkek":
+                    if self.is_gender_change_paused:  # Cinsiyet değiştirme duraklatıldıysa, devam et
+                        self.is_gender_change_paused = False
+                    else:
+                        shifted_audio_data = signal.resample(audio_data, int(len(audio_data) * self.PITCH_SHIFT_FACTOR))
+                        self.stream.write(shifted_audio_data.tobytes())
+                else:
+                    if not self.is_gender_change_paused:  # Cinsiyet değiştirme duraklatılmadıysa, duraklat  
+                        self.hata_mesaji()                      
+                        self.is_gender_change_paused = True
 
-                if self.is_paused:
-                    continue
-
-                shifted_audio_data = signal.resample(audio_data, int(len(audio_data) * self.PITCH_SHIFT_FACTOR))
-
-                self.stream.write(shifted_audio_data.tobytes())
-        else:
-            self.stream.stop_stream()
-            self.stream.close()
-            self.p.terminate()
-            self.hata_mesaji()
+        self.stream.stop_stream()
+        self.stream.close()
+        self.p.terminate()
 
     def classify_gender(self, audio_data):
-        sf.write("temp.wav", audio_data, self.RATE, format='WAV', subtype='FLOAT')
-        signal, x = sf.read("temp.wav")
-        if np.mean(signal[0]) > np.mean(signal[1]):
+        if np.mean(audio_data) > 0:
             gender = "Kadın"
         else:
             gender = "Erkek"
         return gender
 
     def hata_mesaji(self):
-        error_label = tk.Label(self.root, text="HATA: Zaten kadın sesi!")
+        error_label = tk.Label(self.root, text="HATA: Zaten Kadın sesi!")
         error_label.pack()
 
     def run(self):
