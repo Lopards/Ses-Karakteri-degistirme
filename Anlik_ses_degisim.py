@@ -78,10 +78,10 @@ class SesDegisim:
                 kaydedilen_sinyal = np.frombuffer(b''.join(kaydedilen_list[-int(self.RATE / self.CHUNK * self.DELAY_SECONDS):]), dtype=np.float32)
                 cinsiyet = self.classify_gender(kaydedilen_sinyal)
 
-                if cinsiyet == "Erkek":
+                if cinsiyet == "Kadın":
                     shifted_audio_data = signal.resample(audio_data, int(len(audio_data) * self.PITCH_SHIFT_FACTOR))
                     self.stream.write(shifted_audio_data.tobytes())
-                elif cinsiyet == "Kadın":
+                elif cinsiyet == "Erkek":
                     # Ses değiştirme fonksiyonuna girmeden doğrudan sesi yolla
                     self.stream.write(audio_data.tobytes())
 
