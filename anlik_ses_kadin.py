@@ -4,6 +4,7 @@ import pyaudio
 import numpy as np
 from scipy import signal
 import soundfile as sf
+import time
 
 class SesDegisim:
     def __init__(self):
@@ -19,20 +20,20 @@ class SesDegisim:
         self.FORMAT = pyaudio.paFloat32
         self.CHANNELS = 1
         self.RATE = 44100
-        self.PITCH_SHIFT_FACTOR = 0.8
-        self.DELAY_SECONDS = 4
+        self.PITCH_SHIFT_FACTOR = 1.2
+        self.DELAY_SECONDS = 0 # Değişiklik: Delay süresi 0 saniye olarak ayarlandı
 
         self.p = pyaudio.PyAudio()
         self.stream = None
         self.is_running = False
         self.is_paused = False
-        self.is_gender_change_paused = False  # Yeni eklenen değişken
+        self.is_gender_change_paused = False
         self.thread = None
 
         self.root.bind('<Key>', self.klavye_kontrol)
 
     def klavye_kontrol(self, event):
-        if event.char == 'q':  # q ile duraklat/devam et işlemi
+        if event.char == 'q':
             if self.is_running and not self.is_paused:
                 self.is_paused = True
             elif self.is_running and self.is_paused:
@@ -51,7 +52,7 @@ class SesDegisim:
 
     def ses_degisimi_durdur(self):
         self.is_running = False
-        self.is_gender_change_paused = False  # Yeni eklenen değişkenin sıfırlanması
+        self.is_gender_change_paused = False
         self.thread.join()
         if self.stream is not None:
             self.stream.stop_stream()
@@ -71,22 +72,18 @@ class SesDegisim:
         while self.is_running:
             input_data = self.stream.read(self.CHUNK)
             kaydedilen_list.append(input_data)
-            audio_data = np.frombuffer(input_data, dtype=np.float32) * 0.3
+            audio_data = np.frombuffer(input_data, dtype=np.float32) * 0.4
 
             if len(kaydedilen_list) > int(self.RATE / self.CHUNK * self.DELAY_SECONDS):
                 kaydedilen_sinyal = np.frombuffer(b''.join(kaydedilen_list[-int(self.RATE / self.CHUNK * self.DELAY_SECONDS):]), dtype=np.float32)
                 cinsiyet = self.classify_gender(kaydedilen_sinyal)
 
                 if cinsiyet == "Erkek":
-                    if self.is_gender_change_paused:  # Cinsiyet değiştirme duraklatıldıysa, devam et
-                        self.is_gender_change_paused = False
-                    else:
-                        shifted_audio_data = signal.resample(audio_data, int(len(audio_data) * self.PITCH_SHIFT_FACTOR))
-                        self.stream.write(shifted_audio_data.tobytes())
-                else:
-                    if not self.is_gender_change_paused:  # Cinsiyet değiştirme duraklatılmadıysa, duraklat  
-                        self.hata_mesaji()                      
-                        self.is_gender_change_paused = True
+                    shifted_audio_data = signal.resample(audio_data, int(len(audio_data) * self.PITCH_SHIFT_FACTOR))
+                    self.stream.write(shifted_audio_data.tobytes())
+                elif cinsiyet == "Kadın":
+                    # Ses değiştirme fonksiyonuna girmeden doğrudan sesi yolla
+                    self.stream.write(audio_data.tobytes())
 
         self.stream.stop_stream()
         self.stream.close()
