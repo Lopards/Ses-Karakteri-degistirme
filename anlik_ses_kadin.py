@@ -20,7 +20,7 @@ class SesDegisim:
         self.FORMAT = pyaudio.paFloat32
         self.CHANNELS = 1
         self.RATE = 44100
-        self.PITCH_SHIFT_FACTOR = 1.2
+        self.PITCH_SHIFT_FACTOR = 0.85
         self.DELAY_SECONDS = 0 # Değişiklik: Delay süresi 0 saniye olarak ayarlandı
 
         self.p = pyaudio.PyAudio()
@@ -72,7 +72,7 @@ class SesDegisim:
         while self.is_running:
             input_data = self.stream.read(self.CHUNK)
             kaydedilen_list.append(input_data)
-            audio_data = np.frombuffer(input_data, dtype=np.float32) * 0.4
+            audio_data = np.frombuffer(input_data, dtype=np.float32) * 0.5
 
             if len(kaydedilen_list) > int(self.RATE / self.CHUNK * self.DELAY_SECONDS):
                 kaydedilen_sinyal = np.frombuffer(b''.join(kaydedilen_list[-int(self.RATE / self.CHUNK * self.DELAY_SECONDS):]), dtype=np.float32)
