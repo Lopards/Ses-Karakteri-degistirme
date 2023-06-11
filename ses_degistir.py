@@ -18,6 +18,7 @@ import Ses_kaydedici
 import Women
 import Men_voice
 import children_voice
+import kadin_Sesi
 
 def select_audio_file():
     global filename
@@ -86,7 +87,7 @@ def on_select():
                 if gender=="Kadın":
                     showinfo("Hata","Zaten kadın sesi")
                 else:
-                    Women.women(filename)
+                    kadin_Sesi.make_lady_voice(filename)
                     sonmesaj+="Başarılı şekilde kadın sesi oluştu"
                     showinfo("Başarılı",sonmesaj)
             except:
