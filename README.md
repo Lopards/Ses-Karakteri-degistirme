@@ -23,6 +23,9 @@ artık istediğiniz filtreyi deneyebilirsiniz
 
 ![WhatsApp Image 2023-05-30 at 19 25 55](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/3f47d4fb-c8ec-4cc1-b3c5-86db78ff1234)
 
+---
+* **Ek olarak *INTERCOM* dosyası eklendi bu dosya içeriği ile birlikte aynı ağdaki bilgisayarınızla iletişim kurup ses akışını test edebilirsiniz.Ses akışını aktif hale getirmek için terminale "enter" tuşuna sürekli basmalısınız.** yakında arayüze eklenecektir.
+
 
 
 
