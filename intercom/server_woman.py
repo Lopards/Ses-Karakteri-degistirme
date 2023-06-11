@@ -8,14 +8,14 @@ from scipy import signal
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 44100
+RATE = 22050
 
 # Bağlantı ve soket ayarları
-HOST = 'YOUR_IP_ADRESS'
+HOST = 'YOUR_IP_ADRESS' 
 PORT = 12345
 
 # Pitch değiştirme faktörü
-PITCH_SHIFT_FACTOR =  0.85
+PITCH_SHIFT_FACTOR = 0.85
 
 
 # Soket oluşturma ve bağlantıyı bekletme
@@ -31,17 +31,22 @@ print(f"* {address} adresinden bir bağlantı alındı.")
 # Ses dönüşümü ve gönderme
 def convert_and_send(stream, speaker_stream):
     while True:
-        data = stream.read(CHUNK)
+        if input()=="q":
+            break
+            
+        else:# enter tuşu
+            data = stream.read(CHUNK)
+            
+            audio_data = np.frombuffer(data, dtype=np.int16)
         
-        audio_data = np.frombuffer(data, dtype=np.int16)
-     
-        converted_data = signal.resample(audio_data, int(len(audio_data) * PITCH_SHIFT_FACTOR))*1.4
-        converted_data = converted_data.astype(np.int16)
-        converted_data_bytes = converted_data.tobytes()
-        client_socket.sendall(converted_data_bytes)
-       # speaker_stream.write(data)  # Dönüştürülmemiş sesi hoparlörden çal
+            converted_data = signal.resample(audio_data, int(len(audio_data) * PITCH_SHIFT_FACTOR))*1.4
+            converted_data = converted_data.astype(np.int16)
+            converted_data_bytes = converted_data.tobytes()
+            client_socket.sendall(converted_data_bytes)
+            # speaker_stream.write(data)  # Dönüştürülmemiş sesi hoparlörden çal (isteğe bağlı)
             
 """""
+#Ses cinsiyet belirleme eklenecek.
 def determine_gender(data):
     if np.mean(data) > 0:
         gender = "woman"
@@ -50,6 +55,7 @@ def determine_gender(data):
     
     return gender
 """""
+
 
 
 # PyAudio stream oluşturma mic hoparlör
