@@ -1,25 +1,73 @@
-import parselmouth
-from parselmouth.praat import call
-from IPython.display import Audio
+import numpy as np
+from scipy.io import wavfile
 
-def women(dosya):
-    sound = parselmouth.Sound(dosya)
+def make_lady_voice(audio_file):
 
-    Audio(data=sound.values, rate=sound.sampling_frequency)
+    #Bir .wav ses dosyasını yaşlı kadın sesine dönüştürür.
+
+    # Ses dosyasını yükle.
+    sample_rate, audio = wavfile.read(audio_file)
+
+    # Ses dosyasının tonunu değiştir.
+    audio = change_pitch(audio, -27)*1.2 # ses yüksek çıkması için 1.2
+
+    # Ses dosyasının hızını değiştir.
+    audio = change_speed(audio, 0.85)
+    
+    
+
+    # Veri türünü uygun şekilde dönüştür.
+    audio = audio.astype(np.float32)
+
+    # Dönüştürülmüş ses dosyasını kaydet.
+    
+    wavfile.write("old_women_voice.wav", sample_rate, audio)
+
+def change_pitch(audio, n_semitones):
+    """
+    Ses dosyasının tonunu belirtilen yarıton kadar değiştirir.
+
+    Args:
+        audio: Tonu değiştirilecek ses dosyası.
+        n_semitones: Ton değişikliği miktarı (yarıton cinsinden).
+        """
 
 
-    manipulation = call(sound, "To Manipulation", 0.05, 60, 600)
+    # Ses dosyasını frekans alanına dönüştür.
+    frequencies = np.fft.fft(audio)
 
-    type(manipulation)
+    # Frekansları belirtilen yarıton kadar kaydır.
+    frequencies = frequencies * np.exp( 0.9 * (np.pi+1) * (n_semitones) / 10)
 
-    pitch_tier = call(manipulation, "Extract pitch tier")
+    # Frekansları zaman alanına geri dönüştür.
+    audio = np.fft.ifft(frequencies)
 
-    call(pitch_tier, "Multiply frequencies", sound.xmin, sound.xmax, 3)
+    # Tonu değiştirilmiş ses dosyasını döndür.
+    return audio
 
-    call([pitch_tier, manipulation], "Replace pitch tier")
-    sound_octave_up = call(manipulation, "Get resynthesis (overlap-add)")
+def change_speed(audio, rate):
+    """
+    Ses dosyasının hızını belirtilen oranda değiştirir.
 
-    Audio(data=sound_octave_up.values, rate=sound_octave_up.sampling_frequency)
+    Args:
+        audio: Hızı değiştirilecek ses dosyası.
+        rate: Hız değişikliği oranı.
 
-    sound_octave_up.save("kadin_sesi.wav", "WAV")
-    Audio(filename="kadin_sesi.wav")
+    Returns:
+        Hızı değiştirilmiş ses dosyası.
+    """
+
+    # Ses dosyasını zaman alanına dönüştür.
+    samples = np.arange(audio.size)
+
+    # Yeni örnek noktalarını hesapla.
+    new_samples = np.linspace(0, samples[-1], int(samples[-1] * (rate)) + 1)
+
+    # Yeni örnek noktalarını tam sayıya dönüştür.
+    new_samples = new_samples.astype(int)
+
+    # Yeni örnek noktalarını kullanarak ses dosyasını yeniden örnekle.
+    new_audio = audio[new_samples]
+
+    # Hızı değiştirilmiş ses dosyasını döndür.
+    return new_audio
