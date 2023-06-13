@@ -2,82 +2,122 @@ import socket
 import pyaudio
 import numpy as np
 from scipy import signal
-# instant male voice change
+import threading
+import tkinter as tk
 
-# PyAudio ayarları
-CHUNK = 1024
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 22050
+# class eklenen kod
+"""
+arayüz başladıktan sonra BAS-KONUŞ özelliğini aktif etmek isterseniz "q" tuşuna basiniz.
+"""
+class Server:
+    def __init__(self):
+        # PyAudio ayarları
+        self.CHUNK = 1024
+        self.FORMAT = pyaudio.paInt16
+        self.CHANNELS = 1
+        self.RATE = 22050
 
-# Bağlantı ve soket ayarları
-HOST = 'YOUR_IP_ADRESS' 
-PORT = 12345
+        # Bağlantı ve soket ayarları
+        self.HOST = 'YOUR_IP_NUMBER'
+        self.PORT = 12345
 
-# Pitch değiştirme faktörü
-PITCH_SHIFT_FACTOR = 1.2
+        # Pitch değiştirme faktörü
+        self.PITCH_SHIFT_FACTOR = 1.2
 
+        self.is_running = False
+        self.is_paused = False
+        self.server_socket = None
+        self.client_socket = None
+        self.stream = None
+        self.speaker_stream = None
+        self.thread = None
 
-# Soket oluşturma ve bağlantıyı bekletme
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((HOST, PORT))
-server_socket.listen(1)
+        self.create_interface()
 
-print(f"* Bağlantı için {HOST}:{PORT} dinleniyor...")
+    def create_interface(self):
+        self.root = tk.Tk()
+        self.root.title("Ses İletişim Arayüzü")
 
-client_socket, address = server_socket.accept()
-print(f"* {address} adresinden bir bağlantı alındı.")
+        self.start_button = tk.Button(self.root, text="Başlat", command=self.baslat)
+        self.start_button.pack()
 
-# Ses dönüşümü ve gönderme
-def convert_and_send(stream, speaker_stream):
-    while True:
-        if input()=="q":# terminale q tuşu girilirse bağlantı son bulacak.
-            break
-        else:#terminale enter tuşuna basarak konuşabilirsiniz.
-            data = stream.read(CHUNK)
+        self.stop_button = tk.Button(self.root, text="Durdur", command=self.durdur)
+        self.stop_button.pack()
+
+        self.root.bind("<KeyPress>", self.klavye_kontrol)
+        self.root.bind("<KeyRelease>", self.klavye_kontrol)
+
+    def baslat(self):
+        self.is_running = True
+        threading.Thread(target=self.donustur_ve_gonder).start()
+
+    def durdur(self):
+        self.is_running = False
+
+    def klavye_kontrol(self, event):
+        if event.char == 'q':
+            if event.type == tk.EventType.KeyPress:
+                self.donustur_ve_gonder()
+            elif event.type == tk.EventType.KeyRelease:
+                self.durdur()
+
+    def donustur_ve_gonder(self):
+        while True:
+            data = self.stream.read(self.CHUNK)
             audio_data = np.frombuffer(data, dtype=np.int16)
+           
+            if np.mean(audio_data) > 0:
+                cinsiyet = "kadın"
+            else:
+                cinsiyet = "erkek"
             
-            converted_data = signal.resample(audio_data, int(len(audio_data) * PITCH_SHIFT_FACTOR))*1.4
-            converted_data = converted_data.astype(np.int16)
-            converted_data_bytes = converted_data.tobytes()
-            client_socket.sendall(converted_data_bytes)
-            # speaker_stream.write(data)  # Dönüştürülmemiş sesi hoparlörden çal (isteğe bağlı)
             
-"""""
-#Ses cinsiyet belirleme eklenecek.
-def determine_gender(data):
-    if np.mean(data) > 0:
-        gender = "woman"
-    else:
-        gender = "man"
-    
-    return gender
-"""""
+            if cinsiyet == "erkek":
+                self.client_socket.sendall(audio_data)
+            elif cinsiyet == "kadın":
+                converted_data = signal.resample(audio_data, int(len(audio_data) * self.PITCH_SHIFT_FACTOR)) * 1.4
+                converted_data = converted_data.astype(np.int16)
+                converted_data_bytes = converted_data.tobytes()
+                self.client_socket.sendall(converted_data_bytes)
+
+            if not self.is_running:
+                break
 
 
+    def run(self):
+        # Soket oluşturma ve bağlantıyı bekletme
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind((self.HOST, self.PORT))
+        self.server_socket.listen(1)
 
-# PyAudio stream oluşturma mic hoparlör
-p = pyaudio.PyAudio()
-stream = p.open(format=FORMAT,
-                channels=CHANNELS,
-                rate=RATE,
-                input=True,
-                frames_per_buffer=CHUNK)
+        print(f"* Bağlantı için {self.HOST}:{self.PORT} dinleniyor...")
 
-# Hoparlör için PyAudio stream oluşturma
-speaker_stream = p.open(format=FORMAT,
-                        channels=CHANNELS,
-                        rate=RATE,
-                        output=True)
+        self.client_socket, address = self.server_socket.accept()
+        print(f"* {address} adresinden bir bağlantı alındı.")
 
-print("* Ses kaydediliyor ve dönüştürülerek gönderiliyor...")
-convert_and_send(stream, speaker_stream)
+        self.p = pyaudio.PyAudio()
+        self.stream = self.p.open(format=self.FORMAT,
+                                  channels=self.CHANNELS,
+                                  rate=self.RATE,
+                                  input=True,
+                                  frames_per_buffer=self.CHUNK)
 
-stream.stop_stream()
-stream.close()
-speaker_stream.stop_stream()
-speaker_stream.close()
-p.terminate()
+        self.speaker_stream = self.p.open(format=self.FORMAT,
+                                          channels=self.CHANNELS,
+                                          rate=self.RATE,
+                                          output=True)
 
-client_socket.close()
-server_socket.close()
+        self.root.mainloop()
+
+        self.stream.stop_stream()
+        self.stream.close()
+        self.speaker_stream.stop_stream()
+        self.speaker_stream.close()
+        self.p.terminate()
+
+        self.client_socket.close()
+        self.server_socket.close()
+
+if __name__ == "__main__":
+    server = Server()
+    server.run()
