@@ -1,123 +1,126 @@
 import socket
 import pyaudio
 import numpy as np
-from scipy import signal
+"""from scipy import signal """  # eklenecek
 import threading
 import tkinter as tk
 
-# class eklenen kod
-"""
-arayüz başladıktan sonra BAS-KONUŞ özelliğini aktif etmek isterseniz "q" tuşuna basiniz.
-"""
-class Server:
-    def __init__(self):
-        # PyAudio ayarları
-        self.CHUNK = 1024
-        self.FORMAT = pyaudio.paInt16
-        self.CHANNELS = 1
-        self.RATE = 22050
 
-        # Bağlantı ve soket ayarları
-        self.HOST = 'YOUR_IP_NUMBER'
-        self.PORT = 12345
+def donustur_ve_gonder(stream, client_socket, is_running, CHUNK, PITCH_SHIFT_FACTOR):
+    while True:
+        data = stream.read(CHUNK)
+        audio_data = np.frombuffer(data, dtype=np.int16)
+        if is_running:
+            client_socket.sendall(audio_data)
+        else:
+            break
 
-        # Pitch değiştirme faktörü
-        self.PITCH_SHIFT_FACTOR = 1.2
 
-        self.is_running = False
-        self.is_paused = False
-        self.server_socket = None
-        self.client_socket = None
-        self.stream = None
-        self.speaker_stream = None
-        self.thread = None
+def ses_al(stream, client_socket, CHUNK, is_running):
+    p = pyaudio.PyAudio()
+    stream = p.open(format=pyaudio.paInt16, channels=1,
+                    rate=22050, output=True, frames_per_buffer=CHUNK)
 
-        self.create_interface()
+    while True:
+        if is_running:
+            data = client_socket.recv(CHUNK)
+            if not data:
+                break
+            stream.write(data)
+        else:
+            break
 
-    def create_interface(self):
-        self.root = tk.Tk()
-        self.root.title("Ses İletişim Arayüzü")
+    stream.stop_stream()
+    stream.close()
+    client_socket.close()
+    p.terminate()
 
-        self.start_button = tk.Button(self.root, text="Başlat", command=self.baslat)
-        self.start_button.pack()
 
-        self.stop_button = tk.Button(self.root, text="Durdur", command=self.durdur)
-        self.stop_button.pack()
+def run_server():
+    HOST = 'SERVER_IP'
+    PORT = 12345
+    CHUNK = 1024
+    PITCH_SHIFT_FACTOR = 1.2
 
-        self.root.bind("<KeyPress>", self.klavye_kontrol)
-        self.root.bind("<KeyRelease>", self.klavye_kontrol)
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind((HOST, PORT))
+    server_socket.listen(1)
 
-    def baslat(self):
-        self.is_running = True
-        threading.Thread(target=self.donustur_ve_gonder).start()
+    print(f"* Bağlantı için {HOST}:{PORT} dinleniyor...")
 
-    def durdur(self):
-        self.is_running = False
+    client_socket, address = server_socket.accept()
+    print(f"* {address} adresinden bir bağlantı alındı.")
 
-    def klavye_kontrol(self, event):
+    p = pyaudio.PyAudio()
+    stream = p.open(format=pyaudio.paInt16,
+                    channels=1, rate=22050,
+                    input=True,
+                    frames_per_buffer=CHUNK)
+
+    speaker_stream = p.open(format=pyaudio.paInt16,
+                            channels=1, rate=22050,
+                            output=True)
+
+    root = tk.Tk()
+    root.title("Ses İletişim Arayüzü")
+
+    def baslat():
+        nonlocal is_running
+        is_running = True
+        threading.Thread(target=donustur_ve_gonder, args=(
+            stream, client_socket, is_running, CHUNK, PITCH_SHIFT_FACTOR)).start()
+
+    def ses_al_fonk():
+        nonlocal is_running
+        is_running = True
+        threading.Thread(target=ses_al, args=(
+            stream, client_socket, CHUNK, is_running)).start()
+
+    def durdur():
+        nonlocal is_running
+        is_running = False
+
+    def ses_al_stop():
+        nonlocal is_running
+        is_running = False
+
+    is_running = False
+
+    def klavye_kontrol(event):
         if event.char == 'q':
             if event.type == tk.EventType.KeyPress:
-                self.donustur_ve_gonder()
+                donustur_ve_gonder(stream, client_socket,
+                                   is_running, CHUNK, PITCH_SHIFT_FACTOR)
             elif event.type == tk.EventType.KeyRelease:
-                self.durdur()
+                durdur()
 
-    def donustur_ve_gonder(self):
-        while True:
-            data = self.stream.read(self.CHUNK)
-            audio_data = np.frombuffer(data, dtype=np.int16)
-           
-            if np.mean(audio_data) > 0:
-                cinsiyet = "kadın"
-            else:
-                cinsiyet = "erkek"
-            
-            
-            if cinsiyet == "erkek":
-                self.client_socket.sendall(audio_data)
-            elif cinsiyet == "kadın":
-                converted_data = signal.resample(audio_data, int(len(audio_data) * self.PITCH_SHIFT_FACTOR)) * 1.4
-                converted_data = converted_data.astype(np.int16)
-                converted_data_bytes = converted_data.tobytes()
-                self.client_socket.sendall(converted_data_bytes)
+    root.bind("<KeyPress>", klavye_kontrol)
+    root.bind("<KeyRelease>", klavye_kontrol)
 
-            if not self.is_running:
-                break
+    start_button = tk.Button(root, text="Başlat", command=baslat)
+    start_button.pack()
 
+    stop_button = tk.Button(root, text="Durdur", command=durdur)
+    stop_button.pack()
 
-    def run(self):
-        # Soket oluşturma ve bağlantıyı bekletme
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind((self.HOST, self.PORT))
-        self.server_socket.listen(1)
+    ses_al_button = tk.Button(root, text="ses-al", command=ses_al_fonk)
+    ses_al_button.pack()
 
-        print(f"* Bağlantı için {self.HOST}:{self.PORT} dinleniyor...")
+    ses_al_button_stop = tk.Button(
+        root, text="ses-al-stop", command=ses_al_stop)
+    ses_al_button_stop.pack()
 
-        self.client_socket, address = self.server_socket.accept()
-        print(f"* {address} adresinden bir bağlantı alındı.")
+    root.mainloop()
 
-        self.p = pyaudio.PyAudio()
-        self.stream = self.p.open(format=self.FORMAT,
-                                  channels=self.CHANNELS,
-                                  rate=self.RATE,
-                                  input=True,
-                                  frames_per_buffer=self.CHUNK)
+    stream.stop_stream()
+    stream.close()
+    speaker_stream.stop_stream()
+    speaker_stream.close()
+    p.terminate()
 
-        self.speaker_stream = self.p.open(format=self.FORMAT,
-                                          channels=self.CHANNELS,
-                                          rate=self.RATE,
-                                          output=True)
+    client_socket.close()
+    server_socket.close()
 
-        self.root.mainloop()
-
-        self.stream.stop_stream()
-        self.stream.close()
-        self.speaker_stream.stop_stream()
-        self.speaker_stream.close()
-        self.p.terminate()
-
-        self.client_socket.close()
-        self.server_socket.close()
 
 if __name__ == "__main__":
-    server = Server()
-    server.run()
+    run_server()
