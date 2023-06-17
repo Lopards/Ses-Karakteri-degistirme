@@ -1,126 +1,165 @@
 import socket
 import pyaudio
 import numpy as np
-"""from scipy import signal """  # eklenecek
 import threading
 import tkinter as tk
 
 
-def donustur_ve_gonder(stream, client_socket, is_running, CHUNK, PITCH_SHIFT_FACTOR):
-    while True:
-        data = stream.read(CHUNK)
-        audio_data = np.frombuffer(data, dtype=np.int16)
-        if is_running:
-            client_socket.sendall(audio_data)
-        else:
-            break
+class SesIletisimArayuzu:
+    def __init__(self):
+        self.HOST = 'SERVER_IP'
+        self.PORT = 12345
+        self.CHUNK = 1024
+        self.CHANNELS = 1
+        self.RATE = 22050
+        self.PITCH_SHIFT_FACTOR = 1.2
+
+        self.event = threading.Event()
+
+        self.server_socket = None
+        self.client_socket = None
+        self.stream = None
+        self.speaker_stream = None
+        self.root = None
 
 
-def ses_al(stream, client_socket, CHUNK, is_running):
-    p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paInt16, channels=1,
-                    rate=22050, output=True, frames_per_buffer=CHUNK)
+        
 
-    while True:
-        if is_running:
-            data = client_socket.recv(CHUNK)
-            if not data:
+
+        self.is_running = False
+        self.is_running_recv = True
+
+    def send_audio(self):
+        p = pyaudio.PyAudio()
+        self.stream = p.open(format=pyaudio.paInt16,
+                             channels=self.CHANNELS,
+                             rate=self.RATE,
+                             input=True,
+                             frames_per_buffer=self.CHUNK)
+
+        while self.is_running:
+            data = self.stream.read(self.CHUNK)
+            audio_data = np.frombuffer(data, dtype=np.int16)
+            self.client_socket.sendall(audio_data)
+
+            if not self.is_running:
                 break
-            stream.write(data)
-        else:
-            break
 
-    stream.stop_stream()
-    stream.close()
-    client_socket.close()
-    p.terminate()
+        self.stream.stop_stream()
+        self.stream.close()
+        p.terminate()
 
-
-def run_server():
-    HOST = 'SERVER_IP'
-    PORT = 12345
-    CHUNK = 1024
-    PITCH_SHIFT_FACTOR = 1.2
-
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
-    server_socket.listen(1)
-
-    print(f"* Bağlantı için {HOST}:{PORT} dinleniyor...")
-
-    client_socket, address = server_socket.accept()
-    print(f"* {address} adresinden bir bağlantı alındı.")
-
-    p = pyaudio.PyAudio()
-    stream = p.open(format=pyaudio.paInt16,
-                    channels=1, rate=22050,
-                    input=True,
-                    frames_per_buffer=CHUNK)
-
-    speaker_stream = p.open(format=pyaudio.paInt16,
-                            channels=1, rate=22050,
+    def get_sound_fonc(self):
+        p = pyaudio.PyAudio()
+        self.stream = p.open(format=pyaudio.paInt16,
+                            channels=self.CHANNELS,
+                            rate=self.RATE,
                             output=True)
 
-    root = tk.Tk()
-    root.title("Ses İletişim Arayüzü")
+        while self.is_running_recv:
+            data = self.client_socket.recv(self.CHUNK)
+            if not data:
+                break
+            if self.event.is_set():
+                self.stream.write(data)
 
-    def baslat():
-        nonlocal is_running
-        is_running = True
-        threading.Thread(target=donustur_ve_gonder, args=(
-            stream, client_socket, is_running, CHUNK, PITCH_SHIFT_FACTOR)).start()
+        self.stream.stop_stream()
+        self.stream.close()
+        self.client_socket.close()
+        p.terminate()
+        
+    def start_get_sound(self):
+        threading.Thread(target=self.get_sound_fonc).start()
+        self.get_sound_button.config(state="disabled" )
 
-    def ses_al_fonk():
-        nonlocal is_running
-        is_running = True
-        threading.Thread(target=ses_al, args=(
-            stream, client_socket, CHUNK, is_running)).start()
 
-    def durdur():
-        nonlocal is_running
-        is_running = False
 
-    def ses_al_stop():
-        nonlocal is_running
-        is_running = False
+    def get_sound_stop(self):
+        self.event.clear()
+        #self.is_running_recv = False
+        self.get_sound_stop_button.config(state="disabled")
+        self.get_sound_contunie_button.config(state="active")
 
-    is_running = False
+    def get_sound_contunie(self):
+        self.event.set()
+        self.get_sound_contunie_button.config(state="disabled")
+        self.get_sound_stop_button.config(state="active")
+        
 
-    def klavye_kontrol(event):
+
+    def start(self):
+        self.is_running = True
+        threading.Thread(target=self.send_audio).start()
+
+    def stop(self):
+        self.is_running = False
+
+
+    def klavye_kontrol(self, event):
         if event.char == 'q':
             if event.type == tk.EventType.KeyPress:
-                donustur_ve_gonder(stream, client_socket,
-                                   is_running, CHUNK, PITCH_SHIFT_FACTOR)
+                self.start()
             elif event.type == tk.EventType.KeyRelease:
-                durdur()
+                self.stop()
 
-    root.bind("<KeyPress>", klavye_kontrol)
-    root.bind("<KeyRelease>", klavye_kontrol)
+    def run_server(self):
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.bind((self.HOST, self.PORT))
+        self.server_socket.listen(1)
 
-    start_button = tk.Button(root, text="Başlat", command=baslat)
-    start_button.pack()
+        print(f"* Bağlantı için {self.HOST}:{self.PORT} dinleniyor...")
 
-    stop_button = tk.Button(root, text="Durdur", command=durdur)
-    stop_button.pack()
+        self.client_socket, address = self.server_socket.accept()
+        print(f"* {address} adresinden bir bağlantı alındı.")
 
-    ses_al_button = tk.Button(root, text="ses-al", command=ses_al_fonk)
-    ses_al_button.pack()
+        p = pyaudio.PyAudio()
+        self.stream = p.open(format=pyaudio.paInt16,
+                            channels=self.CHANNELS,
+                            rate=self.RATE,
+                            input=True,
+                            frames_per_buffer=self.CHUNK)
 
-    ses_al_button_stop = tk.Button(
-        root, text="ses-al-stop", command=ses_al_stop)
-    ses_al_button_stop.pack()
+        self.speaker_stream = p.open(format=pyaudio.paInt16,
+                                    channels=self.CHANNELS,
+                                    rate=self.RATE,
+                                    output=True)
 
-    root.mainloop()
+        self.root = tk.Tk()
+        self.root.title("Ses İletişim Arayüzü")
 
-    stream.stop_stream()
-    stream.close()
-    speaker_stream.stop_stream()
-    speaker_stream.close()
-    p.terminate()
+        self.start_button = tk.Button(
+            self.root, text="Başlat", command=self.start)
+        self.start_button.pack()
 
-    client_socket.close()
-    server_socket.close()
+        self.stop_button = tk.Button(
+            self.root, text="stop", command=self.stop)
+        self.stop_button.pack()
+
+        self.get_sound_button = tk.Button(
+            self.root, text="Ses Al", command=self.start_get_sound)
+        self.get_sound_button.pack()
+        
+        self.get_sound_stop_button = tk.Button(
+        self.root, text="Ses Alı Duraklat", command=self.get_sound_stop)
+        self.get_sound_stop_button.pack()
+
+        self.get_sound_contunie_button = tk.Button(
+        self.root, text="Ses Alı Devam Et", command=self.get_sound_contunie)
+        self.get_sound_contunie_button.pack()
+
+
+        self.root.mainloop()
+
+        self.stream.stop_stream()
+        self.stream.close()
+        self.speaker_stream.stop_stream()
+        self.speaker_stream.close()
+        p.terminate()
+
+        self.client_socket.close()
+        self.server_socket.close()
 
 
 if __name__ == "__main__":
-    run_server()
+    ses_arayuzu = SesIletisimArayuzu()
+    ses_arayuzu.run_server()
