@@ -3,11 +3,12 @@ import pyaudio
 import numpy as np
 import threading
 import tkinter as tk
+from scipy import signal 
 
 
-class SesIletisimArayuzu:
+class SesIletisimArayuzuE:
     def __init__(self):
-        self.HOST = 'SERVER_IP'
+        self.HOST = 'SERVER_IP_ADRESS'
         self.PORT = 12345
         self.CHUNK = 1024
         self.CHANNELS = 1
@@ -22,32 +23,75 @@ class SesIletisimArayuzu:
         self.speaker_stream = None
         self.root = None
 
-
-        
-
-
         self.is_running = False
         self.is_running_recv = True
+        self.create_interface()
+
+    def create_interface(self):
+        self.root = tk.Tk()
+        self.root.title("Ses İletişim Arayüzü")
+
+        self.start_button = tk.Button(
+            self.root, text="Başlat", command=self.start)
+        self.start_button.pack()
+
+        self.stop_button = tk.Button(
+            self.root, text="stop", command=self.stop)
+        self.stop_button.pack()
+
+        self.get_sound_button = tk.Button(
+            self.root, text="Ses Al", command=self.start_get_sound)
+        self.get_sound_button.pack()
+        
+        self.get_sound_stop_button = tk.Button(
+        self.root, text="Ses Alı Duraklat", command=self.get_sound_stop)
+        self.get_sound_stop_button.pack()
+
+        self.get_sound_contunie_button = tk.Button(
+        self.root, text="Ses Alı Devam Et", command=self.get_sound_contunie)
+        self.get_sound_contunie_button.pack()       
+        
+        
+        self.root.bind("<KeyPress>", self.klavye_kontrol)
+        self.root.bind("<KeyRelease>", self.klavye_kontrol)
+        
 
     def send_audio(self):
         p = pyaudio.PyAudio()
-        self.stream = p.open(format=pyaudio.paInt16,
-                             channels=self.CHANNELS,
-                             rate=self.RATE,
-                             input=True,
-                             frames_per_buffer=self.CHUNK)
-
+        stream = p.open(format=pyaudio.paInt16,
+                        channels=self.CHANNELS,
+                        rate=self.RATE,
+                        input=True,
+                        frames_per_buffer=self.CHUNK)
+        
+       
+        
         while self.is_running:
-            data = self.stream.read(self.CHUNK)
+            data = stream.read(self.CHUNK)
             audio_data = np.frombuffer(data, dtype=np.int16)
-            self.client_socket.sendall(audio_data)
-
+          
+            converted_data= signal.resample(audio_data,int(len(audio_data)*self.PITCH_SHIFT_FACTOR))*1.4
+            converted_data = converted_data.astype(np.int16)
+            converted_data_bytes = converted_data.tobytes()
+            self.client_socket.sendall(converted_data_bytes)
+            
+           
             if not self.is_running:
                 break
-
-        self.stream.stop_stream()
-        self.stream.close()
+        
+        stream.stop_stream()
+        stream.close()
         p.terminate()
+
+            
+    """ def determine_gender(self,audio_data ):
+        if np.mean(audio_data) > 0:
+            gender = "female"
+        else:
+            gender = "male"
+        
+        return gender        """
+        
 
     def get_sound_fonc(self):
         p = pyaudio.PyAudio()
@@ -86,7 +130,6 @@ class SesIletisimArayuzu:
         self.get_sound_stop_button.config(state="active")
         
 
-
     def start(self):
         self.is_running = True
         threading.Thread(target=self.send_audio).start()
@@ -124,30 +167,6 @@ class SesIletisimArayuzu:
                                     rate=self.RATE,
                                     output=True)
 
-        self.root = tk.Tk()
-        self.root.title("Ses İletişim Arayüzü")
-
-        self.start_button = tk.Button(
-            self.root, text="Başlat", command=self.start)
-        self.start_button.pack()
-
-        self.stop_button = tk.Button(
-            self.root, text="stop", command=self.stop)
-        self.stop_button.pack()
-
-        self.get_sound_button = tk.Button(
-            self.root, text="Ses Al", command=self.start_get_sound)
-        self.get_sound_button.pack()
-        
-        self.get_sound_stop_button = tk.Button(
-        self.root, text="Ses Alı Duraklat", command=self.get_sound_stop)
-        self.get_sound_stop_button.pack()
-
-        self.get_sound_contunie_button = tk.Button(
-        self.root, text="Ses Alı Devam Et", command=self.get_sound_contunie)
-        self.get_sound_contunie_button.pack()
-
-
         self.root.mainloop()
 
         self.stream.stop_stream()
@@ -161,5 +180,5 @@ class SesIletisimArayuzu:
 
 
 if __name__ == "__main__":
-    ses_arayuzu = SesIletisimArayuzu()
+    ses_arayuzu = SesIletisimArayuzuE()
     ses_arayuzu.run_server()
