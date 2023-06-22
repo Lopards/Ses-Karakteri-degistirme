@@ -75,7 +75,7 @@ class SesDegisim:
             audio_data = np.frombuffer(input_data, dtype=np.float32) * 0.5
 
             if len(kaydedilen_list) > int(self.RATE / self.CHUNK * self.DELAY_SECONDS):
-                kaydedilen_sinyal = np.frombuffer(b''.join(kaydedilen_list[-int(self.RATE / self.CHUNK * self.DELAY_SECONDS):]), dtype=np.float32)
+                kaydedilen_sinyal = np.frombuffer(b''.join(kaydedilen_list[-int(self.RATE / self.CHUNK * self.DELAY_SECONDS):]), dtype=np.int16)
                 cinsiyet = self.classify_gender(kaydedilen_sinyal)
 
                 if cinsiyet == "Erkek":
