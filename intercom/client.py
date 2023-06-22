@@ -4,18 +4,21 @@ import numpy as np
 import tkinter as tk
 import threading
 
+
+"RUN THİS CODE ON CLİENT COMPUTER İF YOU WANT INTERCOM"
+
 class Client:
     def __init__ (self):
         self.CHUNK = 1024
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 22050
-
-        self.HOST = '192.168.1.44'  # Sunucu IP adresi
+        
+        self.HOST = 'SERVER_IP'  # Sunucu IP adresi
         self.PORT = 12345  # Sunucu port numarası
 
         self.is_running = False
-        self.is_running_recv = False
+        self.is_running_recv = True
 
         self.event = threading.Event()
 
@@ -55,18 +58,15 @@ class Client:
         self.is_running = True
         threading.Thread(target=self.send_audio).start()
 
-        #threading.Thread(target=self.receive_audio).start()
+     
 
     def get_sound(self):
-        #self.is_running = True
-        #threading.Thread(target=self.send_audio).start()
+       
         self.is_running_recv = True
         threading.Thread(target=self.receive_audio).start()
         self.get_sound_button.config(state="disabled")
 
-    """def baslat_ses_al(self):
-        threading.Thread(target=self.receive_audio).start      
-        self.get_sound_button.config(state="disabled")"""
+   
     
     def get_sound_stop(self):
         self.event.clear()
@@ -92,13 +92,14 @@ class Client:
 
     def send_audio(self):
         p = pyaudio.PyAudio()
-        self.stream = p.open(format=self.FORMAT,
+        
+        self.stream = p.open(format=pyaudio.paInt16,
                              channels=self.CHANNELS,
                              rate=self.RATE,
                              input=True,
                              frames_per_buffer=self.CHUNK)
 
-        #self.server_socket.sendall(b"START")  # İletişimi başlatmak için sunucuya "START" mesajı gönderilir
+       
 
         while self.is_running:
             data = self.stream.read(self.CHUNK)
@@ -108,7 +109,7 @@ class Client:
             if not self.is_running:
                 break
 
-        #self.server_socket.sendall(b"STOP")  # İletişimi durdurmak için sunucuya "STOP" mesajı gönderilir
+        
 
         self.stream.stop_stream()
         self.stream.close()
@@ -122,18 +123,28 @@ class Client:
                                 output=True)
 
         while self.is_running_recv:
-            data = self.server_socket.recv(self.CHUNK)
-
-            if not data:
-                break
-            if self.event.is_set():
-                self.stream.write(data)
-
+                data = self.server_socket.recv(self.CHUNK)
+             
+                if not data:
+                    break
+                if self.event.is_set():
+                    
+                     self.stream.write(data)
 
         self.stream.stop_stream()
         self.stream.close()
         self.server_socket.close()
         p.terminate()
+
+
+    """def determine_gender(self,data):
+        if np.mean(data)>0:
+            gender = "female"
+        else:
+            gender ="male"
+
+        return gender"""
+                        
 
     def run(self):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
