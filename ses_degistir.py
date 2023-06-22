@@ -6,19 +6,20 @@ from gtts import gTTS
 from tkinter import filedialog as fd
 import soundfile as sf
 
-
-
 import tkinter as tk
 import os
 import numpy as np
 
+from intercoM.server_manV2 import SesIletisimArayuzuE
+from intercoM.server_womenV2 import SesIletisimArayuzuK
+import kadin_Sesi
 import anlik_ses_kadin
 import Anlik_ses_degisim
 import Ses_kaydedici
 import Women
 import Men_voice
 import children_voice
-import kadin_Sesi
+import yasli_erkek
 
 def select_audio_file():
     global filename
@@ -42,22 +43,9 @@ def classify(filename):
 
     return gender
 
-import socket
 
-def send_audio_to_server(filename):
-    server_ip = "SERVER_IP_ADDRESS"  # Sunucunun IP adresini buraya yazın
-    server_port = 1234  # Sunucunun port numarasını buraya yazın
 
-    # Ses dosyasını oku
-    with open(filename, "rb") as file:
-        audio_data = file.read()
 
-    # Sunucuya bağlan ve ses dosyasını gönder
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((server_ip, server_port))
-        s.sendall(audio_data)
-
-    print("Ses dosyası sunucuya gönderildi.")
 
 
 def on_select():
@@ -99,7 +87,15 @@ def on_select():
                 sonmesaj += "Çouck sesine dönüştürüldü."
                 showinfo("başarılı işlem", sonmesaj)
             except:
-                showinfo("hata", "bir hata oluştu")
+                showinfo("hata", "beklenmedik bir hata oluştu...")
+        elif secim == 4:
+            try:
+                yasli_erkek.make_old_lady_voice(filename)
+                sonmesaj+="Yasli erkek sesine donusturuldu."
+                showinfo("Başarılı islem",sonmesaj)
+            except:
+                showinfo("hata","Beklenmedik bir hata olustu...")
+             
         
         else:
             showinfo("Hata", "Lutfen bir secim yapiniz")
@@ -170,13 +166,14 @@ seskayitDurdur_button = Button(
     frame_ustbolge, text="Kayıt başlat- Durdur", command=Ses_kaydedici.SesKaydedici)
 seskayitDurdur_button.pack(padx=15, pady=10, side=RIGHT)
 
+intercom_men_button = tk.Button(frame_altSag,text="intercom (erkek)",command=lambda:SesIletisimArayuzuE().run_server())
+intercom_men_button.pack(side="bottom",pady=5)
+
+intercom_women_button = tk.Button(frame_altSag,text="intercom (kadın)",command=lambda:SesIletisimArayuzuK().run_server())
+intercom_women_button.pack(side="bottom",pady=20)
+
 #ses_gaydet=Button(frame_ustbolge,text="Kayıt al",command=Ses_Tanimali_kayit.SoundRecorder)
 #ses_gaydet.pack(padx=15, pady=10, side=RIGHT)
-
-
-
-
-
 
 
 real_time_erkek = Button(frame_altSol, text="Anında ses değişimi (erkek)", command=lambda: Anlik_ses_degisim.SesDegisim().run())
@@ -210,6 +207,10 @@ female_radio.pack(padx=15, pady=5, anchor=NW)
 child_radio = Radiobutton(frame_altSol, text="Çocuk sesi", variable=option,
                  value=3, bg='#add8e6', font="Verdan 8")
 child_radio.pack(padx=15, pady=5, anchor=NW)
+
+old_man_radio = Radiobutton(frame_altSol, text="Yaşlı erkek sesi", variable=option,
+                 value=4, bg='#add8e6', font="Verdan 8")
+old_man_radio.pack(padx=15, pady=5, anchor=NW)
 
 # Çalıştır düğmesini oluştur
 run_button = Button(frame_altSol, text="Çalıstır", command=on_select)
