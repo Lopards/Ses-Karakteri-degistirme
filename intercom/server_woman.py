@@ -9,7 +9,7 @@ from scipy import signal
 
 class SesIletisimArayuzuK:
     def __init__(self):
-        self.HOST = '192.168.1.44'
+        self.HOST = 'SERVER_IP_ADRESS'
         self.PORT = 12345
         self.CHUNK = 1024
         self.CHANNELS = 1
