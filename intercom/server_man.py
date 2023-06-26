@@ -95,7 +95,7 @@ class SesIletisimArayuzuE:
 
     def get_sound_fonc(self):
         p = pyaudio.PyAudio()
-        self.stream = p.open(format=pyaudio.paInt16,
+        stream = p.open(format=pyaudio.paInt16,
                             channels=self.CHANNELS,
                             rate=self.RATE,
                             output=True)
