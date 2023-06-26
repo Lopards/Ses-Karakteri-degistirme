@@ -93,7 +93,7 @@ class Client:
     def send_audio(self):
         p = pyaudio.PyAudio()
         
-        self.stream = p.open(format=pyaudio.paInt16,
+        stream = p.open(format=pyaudio.paInt16,
                              channels=self.CHANNELS,
                              rate=self.RATE,
                              input=True,
@@ -102,7 +102,7 @@ class Client:
        
 
         while self.is_running:
-            data = self.stream.read(self.CHUNK)
+            data = stream.read(self.CHUNK)
             audio_data = np.frombuffer(data,np.int16)
             self.server_socket.sendall(audio_data)
 
@@ -111,13 +111,13 @@ class Client:
 
         
 
-        self.stream.stop_stream()
-        self.stream.close()
+        stream.stop_stream()
+        stream.close()
         p.terminate()
 
     def receive_audio(self):
         p = pyaudio.PyAudio()
-        self.stream = p.open(format=self.FORMAT,
+        stream = p.open(format=self.FORMAT,
                                 channels=self.CHANNELS,
                                 rate=self.RATE,
                                 output=True)
@@ -129,10 +129,10 @@ class Client:
                     break
                 if self.event.is_set():
                     
-                     self.stream.write(data)
+                     stream.write(data)
 
-        self.stream.stop_stream()
-        self.stream.close()
+        stream.stop_stream()
+        stream.close()
         self.server_socket.close()
         p.terminate()
 
