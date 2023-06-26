@@ -95,7 +95,7 @@ class SesIletisimArayuzuK:
 
     def get_sound_fonc(self):
         p = pyaudio.PyAudio()
-        self.stream = p.open(format=pyaudio.paInt16,
+        stream = p.open(format=pyaudio.paInt16,
                             channels=self.CHANNELS,
                             rate=self.RATE,
                             output=True)
@@ -107,8 +107,8 @@ class SesIletisimArayuzuK:
             if self.event.is_set():
                 self.stream.write(data)
 
-        self.stream.stop_stream()
-        self.stream.close()
+        stream.stop_stream()
+        stream.close()
         self.client_socket.close()
         p.terminate()
         
