@@ -107,8 +107,8 @@ class SesIletisimArayuzuE:
             if self.event.is_set():
                 self.stream.write(data)
 
-        self.stream.stop_stream()
-        self.stream.close()
+        stream.stop_stream()
+        stream.close()
         self.client_socket.close()
         p.terminate()
         
