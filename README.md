@@ -17,16 +17,18 @@ artık istediğiniz filtreyi deneyebilirsiniz
 * **Metin girme yeri**, **Metin okuma ve Metni kaydetme** Butonları eklendi
 * **Ses tanı** Butonu ile artık seslerinizin **sınıflandırmasını** yapabilirsiniz (Kadın sesi mi Erkek sesi mi?) - artık Anlık olarak tepki verecek.
 ---
-* sesi anlık olarak erkek-Kadın sesine dönüştüren buton eklendi. (** 2 saniye boyunca sesinizin cinsiyet ayrımını yapıyor.)
+* sesi anlık olarak erkek-Kadın sesine dönüştüren buton eklendi. (**2 saniye boyunca sesinizin cinsiyet ayrımını yapıyor**)
 * Bas konuş özelliği eklendi (q tusu)
 
 
-![image](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/6874b84d-6f61-4da2-8230-9e5179f1c406)
+
+![image](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/ef3cc721-18ac-49bb-b161-14f890c7f554)
+
 
 
 ---
 * **Ek olarak *INTERCOM* dosyası eklendi bu dosya içeriği ile birlikte aynı ağdaki bilgisayarınızla iletişim kurup ses akışını test edebilirsiniz.
-
+* İstemci bilgisayar ile bağlantı kurulduktan sonra sesin hangi hoparlörden çıkabileceğine karar verebileceksiniz( **Lutfen ilk önce hoparlörünüzü seçin !**).
 
 
 
