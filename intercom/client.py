@@ -14,7 +14,7 @@ class Client:
         self.CHANNELS = 1
         self.RATE = 22050
         
-        self.HOST = 'SERVER_IP'  # Sunucu IP adresi
+        self.HOST = None
         self.PORT = 12345  # Sunucu port numarası
 
         self.is_running = False
@@ -31,6 +31,15 @@ class Client:
     def create_interface(self):
         self.root = tk.Tk()
         self.root.title("Ses İletişim Arayüzü")
+
+        self.ip_label = tk.Label(self.root, text="IP Adresi:")
+        self.ip_label.pack()
+
+        self.ip_entry = tk.Entry(self.root)
+        self.ip_entry.pack()
+
+        self.connect_button = tk.Button(self.root, text="Bağlan", command=self.connect_to_server)
+        self.connect_button.pack()
 
         self.start_button = tk.Button(self.root, text="Başlat", command=self.start_communication)
         self.start_button.pack()
@@ -51,8 +60,14 @@ class Client:
 
 
 
-        self.root.bind("<KeyPress>", self.keyboard_control)
-        self.root.bind("<KeyRelease>", self.keyboard_control)
+     def connect_to_server(self):
+        self.HOST = self.ip_entry.get()
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_socket.connect((self.HOST, self.PORT))
+        print(f"Bağlantı sağlandı: {self.HOST}")
+
+        self.start_button.config(state="normal")
+        self.get_sound_button.config(state="normal")   
 
     def start_communication(self):
         self.is_running = True
@@ -83,12 +98,7 @@ class Client:
     def stop_communication(self):
         self.is_running = False
 
-    def keyboard_control(self, event):
-        if event.char == 'q':
-            if event.type == tk.EventType.KeyPress:
-                self.send_audio()
-            elif event.type == tk.EventType.KeyRelease:
-                self.stop_communication()
+    
 
     def send_audio(self):
         p = pyaudio.PyAudio()
@@ -158,4 +168,4 @@ class Client:
 
 if __name__ == "__main__":
     client = Client()
-    client.run()
+    
