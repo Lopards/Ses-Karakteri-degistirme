@@ -105,22 +105,44 @@ class SesIletisimArayuzuE:
        
         
         while self.is_running:
-            data = stream.read(self.CHUNK)
-            audio_data = np.frombuffer(data, dtype=np.int16)
-          
-            converted_data= signal.resample(audio_data,int(len(audio_data)*self.PITCH_SHIFT_FACTOR))*1.4
-            converted_data = converted_data.astype(np.int16)
-            converted_data_bytes = converted_data.tobytes()
-            self.client_socket.sendall(converted_data_bytes)
+            try:
+                    
+                data = stream.read(self.CHUNK)
+                audio_data = np.frombuffer(data, dtype=np.int16)
             
+                converted_data= signal.resample(audio_data,int(len(audio_data)*self.PITCH_SHIFT_FACTOR))*1.4
+                converted_data = converted_data.astype(np.int16)
+                converted_data_bytes = converted_data.tobytes()
+                self.client_socket.send(converted_data_bytes)
+                
            
-            if not self.is_running:
-                break
+                if not self.is_running:
+                    break
+            except Exception as e:
+                print("bir hata oldu : ",e)
+                print("yeniden bağlanılmaya çalışılıyor...")
+                self.client_socket.close()
+                self.client_socket, address = self.server_socket.accept()
+                print(f"* {address} adresinden yeni bir bağlantı alındı.")
+
+                
+                data = stream.read(self.CHUNK)
+                audio_data = np.frombuffer(data, dtype=np.int16)
+            
+                converted_data= signal.resample(audio_data,int(len(audio_data)*self.PITCH_SHIFT_FACTOR))*1.4
+                converted_data = converted_data.astype(np.int16)
+                converted_data_bytes = converted_data.tobytes()
+                self.client_socket.send(converted_data_bytes)
+                
+           
+                if not self.is_running:
+                    break
+
+
         
         stream.stop_stream()
         stream.close()
         p.terminate()
-
                             ##### ********** ######            
     """ def determine_gender(self,audio_data ):
         if np.mean(audio_data) > 0:
@@ -133,18 +155,32 @@ class SesIletisimArayuzuE:
                             ##### ********** ######
     def get_sound_fonc(self):
         p = pyaudio.PyAudio()
-        stream = p.open(format=pyaudio.paInt16,
-                            channels=self.CHANNELS,
-                            rate=self.RATE,
-                            output=True)
+        stream = p.open(
+            format=pyaudio.paInt16,
+            channels=self.CHANNELS,
+            rate=self.RATE,
+            output=True
+        )
 
         while self.is_running_recv:
-            data = self.client_socket.recv(self.CHUNK)
-            if not data:
-                break
-            if self.event.is_set():
-                #stream.write(data)
-                self.play_server_output(data)
+            try:
+                data = self.client_socket.recv(self.CHUNK)
+                if not data:
+                    break
+                if self.event.is_set():
+                    self.play_server_output(data)
+            except Exception as e:
+                print("Beklenmeyen bir hata oluştu:", e)
+                print("Yeni bir bağlantı bekleniyor...")
+                self.client_socket.close()
+                self.client_socket, address = self.server_socket.accept()
+                print(f"* {address} adresinden yeni bir bağlantı alındı.")
+                
+                data = self.client_socket.recv(self.CHUNK)
+                if not data:
+                    break
+                if self.event.is_set():
+                    self.play_server_output(data)
 
         stream.stop_stream()
         stream.close()
