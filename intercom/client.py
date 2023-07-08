@@ -96,44 +96,70 @@ class Client:
     def send_audio(self):
         p = pyaudio.PyAudio()
 
-        stream = p.open(format=pyaudio.paInt16,
+        self.stream = p.open(format=pyaudio.paInt16,
                              channels=self.CHANNELS,
                              rate=self.RATE,
                              input=True,
                              frames_per_buffer=self.CHUNK)
 
         while self.is_running:
-            data = stream.read(self.CHUNK)
-            audio_data = np.frombuffer(data, np.int16)
-            self.server_socket.sendall(audio_data)
+            try:
+                data = self.stream.read(self.CHUNK)
+                audio_data = np.frombuffer(data, np.int16)
+                self.server_socket.sendall(audio_data)
 
-            if not self.is_running:
-                break
+                if not self.is_running:
+                    break
+            except Exception as e:
+                print("Beklenmedik bir hata oluştu...Lutfen bekleyiniz:  ",e)
+                print("yeniden bağlanılmaya çalışılıyor.")
+                #.server_socket.close()
+                self.connect_to_server()
+                
+                
+                data = self.stream.read(self.CHUNK)
+                audio_data = np.frombuffer(data, np.int16)
+                self.server_socket.sendall(audio_data)
 
-        stream.stop_stream()
-        stream.close()
+                if not self.is_running:
+                    break
+
+        self.stream.stop_stream()
+        self.stream.close()
         p.terminate()
 
     def receive_audio(self):
         p = pyaudio.PyAudio()
-        self.stream = p.open(format=self.FORMAT,
-                             channels=self.CHANNELS,
-                             rate=self.RATE,
-                             output=True)
+        stream = p.open(format=self.FORMAT,
+                        channels=self.CHANNELS,
+                        rate=self.RATE,
+                        output=True)
 
         while self.is_running_recv:
-            data = self.server_socket.recv(self.CHUNK)
+            try:
+                data = self.server_socket.recv(self.CHUNK)
 
-            if not data:
-                break
+                if not data:
+                    break
 
-            if self.event.is_set():
-                self.stream.write(data)
+                if self.event.is_set():
+                    stream.write(data)
+            except ConnectionResetError:
+                print("Bağlantı sıfırlandı... Yeniden bağlanılıyor.")
+                self.connect_to_server()
+                data = self.server_socket.recv(self.CHUNK)
+
+                if not data:
+                    break
+
+                if self.event.is_set():
+                    stream.write(data)
+        
 
         stream.stop_stream()
         stream.close()
-        self.server_socket.close()
         p.terminate()
+
 
     def get_saved_ip_addresses(self):
         ip_addresses = []
