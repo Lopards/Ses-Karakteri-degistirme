@@ -5,6 +5,7 @@ from datetime import datetime
 from gtts import gTTS
 from tkinter import filedialog as fd
 import soundfile as sf
+from urllib import request
 
 import tkinter as tk
 import os
@@ -116,7 +117,30 @@ def metni_oku():
     metin = text_alani.get("1.0", "end-1c")
     ses = gTTS(text=metin, lang="tr")
     ses.save("Metin_ses.wav")
-    os.system("start Metin_ses.wav")              
+    os.system("start Metin_ses.wav")          
+
+
+
+def internet_on(): # intercom için internet bağlantı kontrolü.
+    try:
+        request.urlopen('http://google.com', timeout=1)
+        return True
+    except request.URLError as err: 
+        return False
+        
+def conenct_flagE():
+    flag = internet_on()
+    if flag:
+        SesIletisimArayuzuE()
+    else:
+        print("internetiniz yok.")
+
+def conenct_flagK():
+    flag = internet_on()
+    if flag:
+        SesIletisimArayuzuK()
+    else:
+        print("internetiniz yok.")
             
             
             
@@ -166,10 +190,10 @@ seskayitDurdur_button = Button(
     frame_ustbolge, text="Kayıt başlat- Durdur", command=Ses_kaydedici.SesKaydedici)
 seskayitDurdur_button.pack(padx=15, pady=10, side=RIGHT)
 
-intercom_men_button = tk.Button(frame_altSag,text="intercom (erkek)",command=lambda:SesIletisimArayuzuE())
+intercom_men_button = tk.Button(frame_altSag,text="intercom (erkek)",command=lambda:conenct_flagE())
 intercom_men_button.pack(side="bottom",pady=5)
 
-intercom_women_button = tk.Button(frame_altSag,text="intercom (kadın)",command=lambda:SesIletisimArayuzuK())
+intercom_women_button = tk.Button(frame_altSag,text="intercom (kadın)",command=lambda:conenct_flagK())
 intercom_women_button.pack(side="bottom",pady=20)
 
 #ses_gaydet=Button(frame_ustbolge,text="Kayıt al",command=Ses_Tanimali_kayit.SoundRecorder)
