@@ -120,6 +120,18 @@ def metni_oku():
     os.system("start Metin_ses.wav")          
 
 
+def guncel_konumu_goster(event):
+    # Mevcut imleç konumunu al
+    konum = text_alani.index(tk.INSERT)
+    satir, sutun = map(int, konum.split('.'))
+    
+    # Konumu etikete yazdır
+    satir_sutun_etiket.config(text=f"Satır: {satir}, Sütun: {sutun}")
+
+# Text alanında herhangi bir değişiklik olursa guncel_konumu_goster'i çağır.
+text_alani.bind("<KeyRelease>", guncel_konumu_goster)
+
+
 
 def internet_on(): # intercom için internet bağlantı kontrolü.
     try:
