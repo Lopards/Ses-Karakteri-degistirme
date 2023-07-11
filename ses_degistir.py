@@ -166,10 +166,10 @@ seskayitDurdur_button = Button(
     frame_ustbolge, text="Kayıt başlat- Durdur", command=Ses_kaydedici.SesKaydedici)
 seskayitDurdur_button.pack(padx=15, pady=10, side=RIGHT)
 
-intercom_men_button = tk.Button(frame_altSag,text="intercom (erkek)",command=lambda:SesIletisimArayuzuE().run_server())
+intercom_men_button = tk.Button(frame_altSag,text="intercom (erkek)",command=lambda:SesIletisimArayuzuE())
 intercom_men_button.pack(side="bottom",pady=5)
 
-intercom_women_button = tk.Button(frame_altSag,text="intercom (kadın)",command=lambda:SesIletisimArayuzuK().run_server())
+intercom_women_button = tk.Button(frame_altSag,text="intercom (kadın)",command=lambda:SesIletisimArayuzuK())
 intercom_women_button.pack(side="bottom",pady=20)
 
 #ses_gaydet=Button(frame_ustbolge,text="Kayıt al",command=Ses_Tanimali_kayit.SoundRecorder)
