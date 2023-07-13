@@ -250,7 +250,7 @@ class SesIletisimArayuzuE:
             rate=self.RATE,
             output=True
         )
-
+        
         while self.is_running_recv:
             try:
                 data = self.client_socket.recv(self.CHUNK)
@@ -259,25 +259,27 @@ class SesIletisimArayuzuE:
                 if self.event.is_set() and self.contunie:
                     self.play_server_output(data)
                 else:
-                    print("hoparlorü tak :D")
+                    print("ses al devam tuşuna bas")
             except Exception as e:
-                print("Beklenmeyen bir hata oluştu:", e)
-                print("Yeni bir bağlantı bekleniyor...")
-                self.client_socket.close()
-                self.client_socket, address = self.server_socket.accept()
-                print(f"* {address} adresinden yeni bir bağlantı alındı.")
-                
-                data = self.client_socket.recv(self.CHUNK)
-                if not data:
-                    break
-                if self.event.is_set():
-                    self.play_server_output(data)
-
+                if self.client_socket is not None and self.contunie:
+                    print("Beklenmeyen bir hata oluştu:", e)
+                    print("Yeni bir bağlantı bekleniyor...")
+                    self.client_socket.close()
+                    self.client_socket = None  # client_socket nesnesini None olarak ayarlayın
+                    
+                    # Yeni bir bağlantı almak için yeni bir server_socket nesnesi oluşturun
+                    self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self.server_socket.bind((self.HOST, self.PORT))
+                    self.server_socket.listen(1)
+                    print(f"* Bağlantı için {self.HOST}:{self.PORT} dinleniyor...")
+                    
+                    self.client_socket, address = self.server_socket.accept()
+                    print(f"* {address} adresinden yeni bir bağlantı alındı.")
+        
         stream.stop_stream()
         stream.close()
         self.client_socket.close()
         p.terminate()
-
                 
             
         
