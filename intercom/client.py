@@ -32,13 +32,18 @@ class Client:
     def create_interface(self):
         self.root = tk.Tk()
         self.root.title("Ses İletişim Arayüzü")
-        self.root.geometry("400x250")
+        self.root.geometry("400x300")
 
         self.ip_label = tk.Label(self.root, text="IP Adresi:")
         self.ip_label.pack()
 
-        self.ip_combobox = ttk.Combobox(self.root, values=self.get_saved_ip_addresses())
+        self.ip_combobox = ttk.Combobox(self.root)
         self.ip_combobox.pack()
+
+        self.listbox = tk.Listbox(self.root)
+        self.listbox.pack()
+
+        self.listbox.bind("<Double-Button-1>", self.handle_listbox_double_click) # çift tıklandığında combobox'a yönlendiriyor.
 
         self.scan_ip_button = tk.Button(self.root, text="İP TARA", command=self.scan_ip)
         self.scan_ip_button.pack()
@@ -68,15 +73,19 @@ class Client:
 
     def scan_ip(self):
         output = subprocess.check_output(['nmap', '-sn', '192.168.1.0/24'])
-        output = output.decode('latin-1')
+        output = output.decode('latin-1') # utf-8 de kullanılabilir.
 
         print("Ağdaki tüm cihazların IP adresleri:")
         lines = output.splitlines()
         for line in lines:
             if 'Nmap scan report for' in line:
                 ip_address = line.split()[-1]
-                print(ip_address) # şu anda sadece terminale yazdırıyor.
+                ip_address = ip_address.strip("()") # ip taraması yapıldığında strip ile parantezleri ortadan kaldırıyor.
+                self.listbox.insert(tk.END, ip_address)
 
+    def handle_listbox_double_click(self, event):
+        selected_ip = self.listbox.get(tk.ACTIVE)
+        self.ip_combobox.set(selected_ip)
 
     def connect_to_server(self):
         selected_ip = self.ip_combobox.get()
@@ -97,12 +106,11 @@ class Client:
     def disconnect(self):
         self.is_running = False  # Gönderim ve ses alma işlemlerini durdur
         self.is_running_recv = False
-        self.contunie = False # bağlantı yönetimi için
-        
-        
+        self.contunie = False
+
         if self.server_socket is not None:
             self.server_socket.close()
-        
+
         self.root.quit()
 
     def start_communication(self):
@@ -127,7 +135,7 @@ class Client:
         self.get_sound_stop_button.config(state="normal")
 
     def stop_communication(self):
-        if self.is_running :    
+        if self.is_running:
             self.is_running = False
 
     def send_audio(self):
@@ -148,18 +156,17 @@ class Client:
                 if not self.is_running:
                     break
             except Exception as e:
-                print("Beklenmedik bir hata oluştu...Lutfen bekleyiniz:  ",e)
-                print("yeniden bağlanılmaya çalışılıyor.")
-                #.server_socket.close()
+                print("Beklenmedik bir hata oluştu... Lütfen bekleyiniz: ", e)
+                print("Yeniden bağlanılmaya çalışılıyor.")
                 self.connect_to_server()
                 p = pyaudio.PyAudio()
 
                 self.stream = p.open(format=pyaudio.paInt16,
-                             channels=self.CHANNELS,
-                             rate=self.RATE,
-                             input=True,
-                             frames_per_buffer=self.CHUNK)
-                
+                                      channels=self.CHANNELS,
+                                      rate=self.RATE,
+                                      input=True,
+                                      frames_per_buffer=self.CHUNK)
+
                 data = self.stream.read(self.CHUNK)
                 audio_data = np.frombuffer(data, np.int16)
                 self.server_socket.sendall(audio_data)
@@ -189,7 +196,7 @@ class Client:
                     stream.write(data)
             except Exception as e:
                 if self.server_socket is not None and self.contunie:
-                    print("Bağlantı sıfırlandı... Yeniden bağlanılıyor.\ne")
+                    print("Bağlantı sıfırlandı... Yeniden bağlanılıyor.\n", e)
                     self.connect_to_server()
                     data = self.server_socket.recv(self.CHUNK)
 
@@ -198,12 +205,10 @@ class Client:
 
                     if self.event.is_set():
                         stream.write(data)
-        
 
         stream.stop_stream()
         stream.close()
         p.terminate()
-
 
     def get_saved_ip_addresses(self):
         ip_addresses = []
