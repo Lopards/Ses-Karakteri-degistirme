@@ -232,7 +232,7 @@ class SesIletisimArayuzuE:
                     
             
                     if not self.is_running:
-                        break
+                        return
 
 
         
