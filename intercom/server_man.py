@@ -44,7 +44,10 @@ class SesIletisimArayuzuE:
         self.ip_combobox = ttk.Combobox(self.root, values=self.get_saved_ip_addresses())
         self.ip_combobox.pack()
 
-        self.connect_button = tk.Button(self.root, text="Bağlan", command=self.connect_to_server)
+        self.ip_scan_button = tk.Button(self.root, text="ip tara", cursor="hand2", command=self.get_local_ip)
+        self.ip_scan_button.pack(pady=3)
+
+        self.connect_button = tk.Button(self.root, text="Bağlan", cursor="hand2", command=self.connect_to_server)
         self.connect_button.pack()
 
         self.start_button = tk.Button(
@@ -291,6 +294,13 @@ class SesIletisimArayuzuE:
 
 
                             ##### ********** ######        
+
+    def get_local_ip(self):
+        
+            #  local IP adresini alıyoruz
+            local_ip = socket.gethostbyname(socket.gethostname())
+            self.ip_combobox.insert(tk.END,local_ip)
+        
     def start_get_sound(self):
         self.contunie = True
         
