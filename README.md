@@ -17,12 +17,13 @@ artık istediğiniz filtreyi deneyebilirsiniz
 * **Metin girme yeri**, **Metin okuma ve Metni kaydetme** Butonları eklendi
 * **Ses tanı** Butonu ile artık seslerinizin **sınıflandırmasını** yapabilirsiniz (Kadın sesi mi Erkek sesi mi?) - artık Anlık olarak tepki verecek.
 ---
-* sesi anlık olarak erkek-Kadın sesine dönüştüren buton eklendi. (**2 saniye boyunca sesinizin cinsiyet ayrımını yapıyor**)
+* sesi anlık olarak erkek-Kadın sesine dönüştüren buton eklendi. 
 * Bas konuş özelliği eklendi (q tusu)
 
 
 
-![image](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/ef3cc721-18ac-49bb-b161-14f890c7f554)
+![image](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/20f17337-4667-4e76-b16e-e95c7e9bfe59)
+
 
 
 
