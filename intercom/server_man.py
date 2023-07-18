@@ -200,22 +200,25 @@ class SesIletisimArayuzuE:
                         input=True,
                         frames_per_buffer=self.CHUNK)
         
-       
-        
-        while self.is_running:
-            try:
-                  while self.is_running:  
-                    data = stream.read(self.CHUNK)
-                    audio_data = np.frombuffer(data, dtype=np.int16)
-                
-                    converted_data= signal.resample(audio_data,int(len(audio_data)*self.PITCH_SHIFT_FACTOR))*1.4
-                    converted_data = converted_data.astype(np.int16)
-                    converted_data_bytes = converted_data.tobytes()
-                    self.client_socket.send(converted_data_bytes)
-                    
+       Esik_deger = 10 
+        while True:
+
+            data = stream.read(self.CHUNK)
+            audio_data = np.frombuffer(data, dtype=np.int16)
+            if np.abs(audio_data).mean() > Esik_deger: # mikrofona gelen ses verilerin MUTLAK değerinin ortalamasını alarak ses şiddetini buluyoruz. ortalama, eşik değerinden yüksekse ses iletim devam ediyor.
+                self.is_running = True
             
+            
+                try:
+                    if self.is_running:
+                    
+                        converted_data = signal.resample(audio_data, int(len(audio_data) * self.PITCH_SHIFT_FACTOR)) * 1.4
+                        converted_data = converted_data.astype(np.int16)
+                        converted_data_bytes = converted_data.tobytes()
+                        self.client_socket.sendall(converted_data_bytes)
+
                     if not self.is_running:
-                        return
+                            return
             except Exception as e:
                 if self.client_socket is not None and self.contunie == True:
                     print("bir hata oldu : ",e)
