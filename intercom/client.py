@@ -5,7 +5,7 @@ import pyaudio
 import numpy as np
 import socket
 import subprocess
-
+import nmap
 class Client:
     def __init__(self):
         self.CHUNK = 512
@@ -72,21 +72,24 @@ class Client:
         self.root.mainloop()
 
     def scan_ip(self):
-        output = subprocess.check_output(['nmap', '-sn', '192.168.1.0/24'])
-        output = output.decode('latin-1') # utf-8 de kullanılabilir.
+        nm = nmap.PortScanner()
+        nm.scan('192.168.1.0/24', arguments='-sn')
+        hosts = nm.all_hosts()
 
-        print("Ağdaki tüm cihazların IP adresleri:")
-        lines = output.splitlines()
-        for line in lines:
-            if 'Nmap scan report for' in line:
-                ip_address = line.split()[-1]
-                ip_address = ip_address.strip("()") # ip taraması yapıldığında strip ile parantezleri ortadan kaldırıyor.
-                self.listbox.insert(tk.END, ip_address)
+        print("Ağdaki tüm cihazların IP ve MAC adresleri:")
+        for host in hosts:
+            if 'mac' in nm[host]['addresses']:
+                ip_address = nm[host]['addresses']['ipv4']
+                mac_address = nm[host]['addresses']['mac']
+                self.listbox.insert(tk.END,ip_address+"     "+str(mac_address))
+                #print(ip_address, mac_address)
+
 
     def handle_listbox_double_click(self, event):
-        selected_ip = self.listbox.get(tk.ACTIVE)
+        selected_item = self.listbox.get(tk.ACTIVE)
+        selected_ip = selected_item.split()[0]  # Sadece IP adresini combobox'a gönder
         self.ip_combobox.set(selected_ip)
-
+        
     def connect_to_server(self):
         selected_ip = self.ip_combobox.get()
         self.HOST = selected_ip
