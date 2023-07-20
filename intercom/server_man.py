@@ -35,44 +35,53 @@ class SesIletisimArayuzuE:
                             ##### ********** ######
     def create_interface(self):
         self.root = tk.Tk()
+        
         self.root.title("Ses İletişim Arayüzü")
-        self.root.geometry("250x250")
+        self.root.geometry("700x400")
 
         self.ip_label = tk.Label(self.root, text="IP Adresi:")
-        self.ip_label.pack()
+        self.ip_label.pack(pady=30)
+        frame_ustbolge = Frame(self.root, bg="#0080FF")
+        frame_ustbolge.place(relx=0.1, rely=0.1, relwidth=0.75, relheight=0.1)
 
-        self.ip_combobox = ttk.Combobox(self.root, values=self.get_saved_ip_addresses())
-        self.ip_combobox.pack()
+        frame_altSol = Frame(self.root, bg="#0080FF")
+        frame_altSol.place(relx=0.1, rely=0.21, relwidth=0.36, relheight=0.66)
 
-        self.ip_scan_button = tk.Button(self.root, text="ip tara", cursor="hand2", command=self.get_local_ip)
-        self.ip_scan_button.pack(pady=3)
+        frame_altSag = Frame(self.root, bg="#0080FF")
+        frame_altSag.place(relx=0.47, rely=0.21, relwidth=0.38, relheight=0.66)
 
-        self.connect_button = tk.Button(self.root, text="Bağlan", cursor="hand2", command=self.connect_to_server)
-        self.connect_button.pack()
+        self.ip_combobox = ttk.Combobox(frame_ustbolge, values=self.get_saved_ip_addresses())
+        self.ip_combobox.pack(padx=10,side=LEFT)
 
-        self.start_button = tk.Button(
-            self.root, text="Başlat",cursor="hand2", command=self.start)
-        self.start_button.pack(pady=3)
+        self.ip_scan_button = tk.Button(frame_ustbolge, text="ip tara",cursor="hand2", command=self.get_local_ip)
+        self.ip_scan_button.pack(side=LEFT,pady=3)
 
-        self.stop_button = tk.Button(
-            self.root, text="stop",cursor="hand2", command=self.stop)
+        self.connect_button = tk.Button(frame_ustbolge, text="Bağlan",cursor="hand2", command=self.connect_to_server)
+        self.connect_button.pack(side=LEFT,pady=3,padx=5)
+
+        self.start_button = tk.Button(frame_altSol, text="Başlat",cursor="hand2", command=self.start)
+        self.start_button.pack(side=TOP, pady=5)
+
+        self.stop_button = tk.Button(frame_altSol, text="stop",cursor="hand2", command=self.stop)
         self.stop_button.pack()
 
-        self.get_sound_button = tk.Button(
-            self.root, text="Ses Al",cursor="hand2", command=self.start_get_sound,disabledforeground="#a9a9a9")
-        self.get_sound_button.pack(pady=3)
-        
-        self.get_sound_contunie_button = tk.Button(
-        self.root, text="Ses Alı Devam Et",cursor="hand2", command=self.get_sound_contunie)
+        self.get_sound_button = tk.Button(frame_altSol, text="Ses Al",cursor="hand2", command=self.start_get_sound,disabledforeground="#a9a9a9")
+        self.get_sound_button.pack(side=TOP,padx=10, pady=5)
+
+        self.get_sound_contunie_button = tk.Button(frame_altSol, text="Ses Alı Devam Et",cursor="hand2", command=self.get_sound_contunie)
         self.get_sound_contunie_button.pack()  
         
-        self.get_sound_stop_button = tk.Button(
-        self.root, text="Ses Alı Duraklat",cursor="hand2", command=self.get_sound_stop)
-        self.get_sound_stop_button.pack(pady=3)
+        self.get_sound_stop_button = tk.Button(frame_altSol, text="Ses Alı Duraklat",cursor="hand2", command=self.get_sound_stop)
+        self.get_sound_stop_button.pack(side=TOP,padx=10, pady=5)
 
-        self.disconnect_button = tk.Button(
-        self.root, text="Bağlantıyı kes",cursor="hand2", command=self.disconnect)
-        self.disconnect_button.pack()  
+        self.disconnect_button = tk.Button(frame_altSol, text="Bağlantıyı kes",cursor="hand2", command=self.disconnect)
+        self.disconnect_button.pack()
+
+        self.text_place = tk.Text(frame_altSag,height=10,width=33)
+        self.text_place.pack()
+
+        self.text_send_button = tk.Button(frame_altSag, text="Metni gönder",cursor="hand2", command=self.disconnect)
+        self.text_send_button.pack(pady=5)
 
              
         
