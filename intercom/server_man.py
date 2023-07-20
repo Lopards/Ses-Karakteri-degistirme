@@ -200,17 +200,19 @@ class SesIletisimArayuzuE:
                         input=True,
                         frames_per_buffer=self.CHUNK)
         
-       Esik_deger = 10 
+        Esik_deger = 10 
         while True:
 
             data = stream.read(self.CHUNK)
             audio_data = np.frombuffer(data, dtype=np.int16)
             if np.abs(audio_data).mean() > Esik_deger: # mikrofona gelen ses verilerin MUTLAK değerinin ortalamasını alarak ses şiddetini buluyoruz. ortalama, eşik değerinden yüksekse ses iletim devam ediyor.
-                self.is_running = True
+                mikrofon = True
+            else:
+                mikrofon = False
             
             
-                try:
-                    if self.is_running:
+            try:
+                    if self.is_running and mikrofon:
                     
                         converted_data = signal.resample(audio_data, int(len(audio_data) * self.PITCH_SHIFT_FACTOR)) * 1.4
                         converted_data = converted_data.astype(np.int16)
