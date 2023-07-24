@@ -22,7 +22,8 @@ artık istediğiniz filtreyi deneyebilirsiniz
 
 
 
-![image](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/96dea5ea-061b-4723-886e-71135e0b07bf)
+![image](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/7871f683-f6d4-437a-a44d-dadf9faba40a)
+
 
 
 
