@@ -1,11 +1,13 @@
-import tkinter as tk
+from tkinter import *
 import tkinter.ttk as ttk
 import threading
 import pyaudio
 import numpy as np
 import socket
-import subprocess
+
 import nmap
+import tkinter as tk
+
 class Client:
     def __init__(self):
         self.CHUNK = 512
@@ -15,6 +17,7 @@ class Client:
 
         self.HOST = None  # Sunucu IP adresi
         self.PORT = 12345  # Sunucu port numarası
+        self.PORT_TEXT = 12346
         self.contunie = True
         self.is_running = False
         self.is_running_recv = True
@@ -31,45 +34,87 @@ class Client:
 
     def create_interface(self):
         self.root = tk.Tk()
-        self.root.title("Ses İletişim Arayüzü")
-        self.root.geometry("400x300")
+        self.root.title("deneme")
+        self.root.geometry("600x450")
+        
+        frame_sol = Frame(self.root )
+        frame_sol.place(relx=0.03, rely=0.03, relwidth=0.55, relheight=0.55)
 
-        self.ip_label = tk.Label(self.root, text="IP Adresi:")
-        self.ip_label.pack()
+        frame_orta = Frame(self.root )
+        frame_orta.place(relx=0.60,rely=0.03, relwidth=0.30, relheight=0.55)
 
-        self.ip_combobox = ttk.Combobox(self.root)
+        frame_alt = Frame(self.root)
+        frame_alt.place(relx=0.15,rely=0.60, relwidth=0.70, relheight=0.36)
+        
+        self.ip_combobox = ttk.Combobox(frame_sol)
         self.ip_combobox.pack()
-
-        self.listbox = tk.Listbox(self.root)
+        
+        self.listbox = tk.Listbox(frame_sol,height=10,width=50)
         self.listbox.pack()
-
         self.listbox.bind("<Double-Button-1>", self.handle_listbox_double_click) # çift tıklandığında combobox'a yönlendiriyor.
+        
+        self.metin_yeri = tk.Text(frame_alt,height=8,width=45)
+        self.metin_yeri.pack()
+        self.metin_al_f = tk.Button(frame_alt, text="metin al",command=self.receive_text_thread, state="disabled")
+        self.metin_al_f.pack()
 
-        self.scan_ip_button = tk.Button(self.root, text="İP TARA", command=self.scan_ip)
-        self.scan_ip_button.pack()
+        self.ip_scan_button = Button(frame_sol, text="IP TARA",command= self.scan_ip)
+        self.ip_scan_button.pack()
 
-        self.connect_button = tk.Button(self.root, text="Bağlan", command=self.connect_to_server)
-        self.connect_button.pack()
+        self.connect_button = tk.Button(frame_sol, text="Bağlan",command=self.connect_to_server)
+        self.connect_button.pack(padx=3)
 
-        self.start_button = tk.Button(self.root, text="Başlat", command=self.start_communication, state="disabled")
-        self.start_button.pack()
+        self.start_button = tk.Button(frame_orta, text="Başlat",cursor="hand2",command=self.start_communication, state="disabled")
+        self.start_button.pack(side=TOP, pady=5)
 
-        self.stop_button = tk.Button(self.root, text="Durdur", command=self.stop_communication, state="disabled")
+        self.stop_button = tk.Button(frame_orta, text="stop",cursor="hand2",command=self.stop_communication, state="disabled" )
         self.stop_button.pack()
 
-        self.get_sound_button = tk.Button(self.root, text="Ses Al", command=self.get_sound, state="disabled")
-        self.get_sound_button.pack()
+        self.get_sound_button = tk.Button(frame_orta, text="Ses Al",cursor="hand2",command=self.get_sound, state="disabled" )
+        self.get_sound_button.pack(side=TOP,padx=10, pady=5)
 
-        self.get_sound_continue_button = tk.Button(self.root, text="Ses Almaya Devam Et", command=self.get_sound_continue, state="disabled")
-        self.get_sound_continue_button.pack()
+        self.get_sound_contunie_button = tk.Button(frame_orta, text="Ses Alı Devam Et",cursor="hand2",command=self.get_sound_continue, state="disabled")
+        self.get_sound_contunie_button.pack()  
+        
+        self.get_sound_stop_button = tk.Button(frame_orta, text="Ses Alı Duraklat",cursor="hand2",command=self.get_sound_stop, state="disabled" )
+        self.get_sound_stop_button.pack(side=TOP,padx=10, pady=5)
 
-        self.get_sound_stop_button = tk.Button(self.root, text="Ses Almayı Durdur", command=self.get_sound_stop, state="disabled")
-        self.get_sound_stop_button.pack()
-
-        self.disconnect_button = tk.Button(self.root, text="Bağlantıyı kes", command=self.disconnect, state="disabled")
+        self.disconnect_button = tk.Button(frame_orta, text="Bağlantıyı kes",cursor="hand2",command=self.disconnect, state="disabled")
         self.disconnect_button.pack()
+        self.scan_ip()
+        self.root.mainloop()    
 
-        self.root.mainloop()
+    
+    def receive_text(self):
+           
+           
+        server_socket_text = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket_text.connect((self.HOST, self.PORT_TEXT))
+       # self.server_socket,adress = se
+        print(f"Metin için Bağlantı sağlandı: {self.HOST}")
+        while True:
+            try:
+                data = server_socket_text.recv(1024)
+                
+
+                # Check the data type based on the flag
+                
+                metin = data.decode("utf-8")
+                self.metin_yeri.insert(tk.END, metin + "\n")
+                self.metin_yeri.see(tk.END)  # Scrollbar ile otomatik olarak en sona inmesini sağlar
+                self.root.update()  # GUI'yi güncellemek için root penceresini yeniler
+
+                # Handle audio data here if needed
+                # elif data.startswith(b"AUDIO:"):
+                #     ... (handle audio data)
+
+            except ConnectionResetError:
+                break
+        server_socket_text.close()
+
+    def receive_text_thread(self):
+        ti1 = threading.Thread(target=self.receive_text)
+        ti1.start()
 
     def scan_ip(self):
         nm = nmap.PortScanner()
@@ -89,7 +134,7 @@ class Client:
         selected_item = self.listbox.get(tk.ACTIVE)
         selected_ip = selected_item.split()[0]  # Sadece IP adresini combobox'a gönder
         self.ip_combobox.set(selected_ip)
-        
+
     def connect_to_server(self):
         selected_ip = self.ip_combobox.get()
         self.HOST = selected_ip
@@ -101,10 +146,36 @@ class Client:
         self.server_socket.connect((self.HOST, self.PORT))
         print(f"Bağlantı sağlandı: {self.HOST}")
 
+
+
         self.start_button.config(state="normal")
         self.stop_button.config(state="normal")
         self.get_sound_button.config(state="normal")
         self.disconnect_button.config(state="normal")
+        self.metin_al_f.config(state="normal")
+
+
+        p = pyaudio.PyAudio()
+        stream = p.open(format=pyaudio.paInt16,
+                            channels=self.CHANNELS,
+                            rate=self.RATE,
+                            input=True,
+                            frames_per_buffer=self.CHUNK)
+
+        speaker_stream = p.open(format=pyaudio.paInt16,
+                                    channels=self.CHANNELS,
+                                    rate=self.RATE,
+                                    output=True)
+        
+
+        stream.stop_stream()
+        stream.close()
+        speaker_stream.stop_stream()
+        speaker_stream.close()
+        p.terminate()
+
+        
+        #self.server_socket.close()
 
     def disconnect(self):
         self.is_running = False  # Gönderim ve ses alma işlemlerini durdur
@@ -112,8 +183,13 @@ class Client:
         self.contunie = False
 
         if self.server_socket is not None:
-            self.server_socket.close()
+            try:
 
+                self.server_socket.shutdown(socket.SHUT_RDWR)   
+                self.server_socket.close()
+            except (OSError,AttributeError):
+                print("gg")
+                pass
         self.root.quit()
 
     def start_communication(self):
@@ -124,17 +200,17 @@ class Client:
     def get_sound(self):
         self.is_running_recv = True
         threading.Thread(target=self.receive_audio).start()
-        self.get_sound_button.config(state="disabled")
-        self.get_sound_continue_button.config(state="normal")
+        #self.get_sound_button.config(state="disabled")
+        self.get_sound_contunie_button.config(state="normal")
 
     def get_sound_stop(self):
         self.event.clear()
         self.get_sound_stop_button.config(state="disabled")
-        self.get_sound_continue_button.config(state="normal")
+        self.get_sound_contunie_button.config(state="normal")
 
     def get_sound_continue(self):
         self.event.set()
-        self.get_sound_continue_button.config(state="disabled")
+        self.get_sound_contunie_button.config(state="disabled")
         self.get_sound_stop_button.config(state="normal")
 
     def stop_communication(self):
@@ -144,7 +220,7 @@ class Client:
     def send_audio(self):
         p = pyaudio.PyAudio()
 
-        self.stream = p.open(format=pyaudio.paInt16,
+        stream = p.open(format=pyaudio.paInt16,
                              channels=self.CHANNELS,
                              rate=self.RATE,
                              input=True,
@@ -152,33 +228,29 @@ class Client:
 
         while self.is_running:
             try:
-                data = self.stream.read(self.CHUNK)
+                data = stream.read(self.CHUNK)
                 audio_data = np.frombuffer(data, np.int16)
                 self.server_socket.sendall(audio_data)
 
                 if not self.is_running:
                     break
             except Exception as e:
-                print("Beklenmedik bir hata oluştu... Lütfen bekleyiniz: ", e)
-                print("Yeniden bağlanılmaya çalışılıyor.")
-                self.connect_to_server()
-                p = pyaudio.PyAudio()
+                if self.server_socket is not None and self.contunie ==True:
 
-                self.stream = p.open(format=pyaudio.paInt16,
-                                      channels=self.CHANNELS,
-                                      rate=self.RATE,
-                                      input=True,
-                                      frames_per_buffer=self.CHUNK)
+                    print("Beklenmedik bir hata oluştu... Lütfen bekleyiniz: ", e)
+                    print("Yeniden bağlanılmaya çalışılıyor.")
+                    self.connect_to_server()
+               
 
-                data = self.stream.read(self.CHUNK)
+                """data = stream.read(self.CHUNK)
                 audio_data = np.frombuffer(data, np.int16)
                 self.server_socket.sendall(audio_data)
 
                 if not self.is_running:
-                    break
+                    break"""
 
-        self.stream.stop_stream()
-        self.stream.close()
+        stream.stop_stream()
+        stream.close()
         p.terminate()
 
     def receive_audio(self):
@@ -201,16 +273,19 @@ class Client:
                 if self.server_socket is not None and self.contunie:
                     print("Bağlantı sıfırlandı... Yeniden bağlanılıyor.\n", e)
                     self.connect_to_server()
+                    
                     data = self.server_socket.recv(self.CHUNK)
 
                     if not data:
                         break
 
-                    if self.event.is_set():
+                    if self.event.is_set() and self.contunie:
                         stream.write(data)
+                    
 
         stream.stop_stream()
         stream.close()
+        self.server_socket.close()
         p.terminate()
 
     def get_saved_ip_addresses(self):
