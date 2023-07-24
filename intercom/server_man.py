@@ -1,3 +1,8 @@
+import speech_recognition as sr
+from tkinter import *
+import tkinter as tk
+import threading
+
 import socket
 import pyaudio
 import numpy as np
@@ -5,15 +10,17 @@ import threading
 import tkinter as tk
 import tkinter.ttk as ttk
 from scipy import signal 
-from urllib import request
 
+import speech_recognition as sr
+import time
 
-# ani program kapanmasına karşılık try-expect eklendi.
-#hoparlör
+# server_man.py denemesidir.
+
 class SesIletisimArayuzuE:
     def __init__(self):
         self.HOST = None
         self.PORT = 12345
+        self.PORT_TEXT =12346
         self.CHUNK = 1024
         self.CHANNELS = 1
         self.RATE = 22050
@@ -21,6 +28,10 @@ class SesIletisimArayuzuE:
 
         self.event = threading.Event()
         self.contunie = True
+        self.flag = None
+        self.metin_flag = False
+        self.internet_baglantisi = False
+        
         self.server_socket = None
         self.client_socket = None
         self.stream = None
@@ -37,18 +48,21 @@ class SesIletisimArayuzuE:
         self.root = tk.Tk()
         
         self.root.title("Ses İletişim Arayüzü")
-        self.root.geometry("700x400")
+        self.root.geometry("1000x400")
 
         self.ip_label = tk.Label(self.root, text="IP Adresi:")
         self.ip_label.pack(pady=30)
         frame_ustbolge = Frame(self.root, bg="#0080FF")
-        frame_ustbolge.place(relx=0.1, rely=0.1, relwidth=0.75, relheight=0.1)
+        frame_ustbolge.place(relx=0.03, rely=0.1, relwidth=0.75, relheight=0.1)
 
         frame_altSol = Frame(self.root, bg="#0080FF")
-        frame_altSol.place(relx=0.1, rely=0.21, relwidth=0.36, relheight=0.66)
+        frame_altSol.place(relx=0.03, rely=0.21, relwidth=0.36, relheight=0.66)
 
         frame_altSag = Frame(self.root, bg="#0080FF")
-        frame_altSag.place(relx=0.47, rely=0.21, relwidth=0.38, relheight=0.66)
+        frame_altSag.place(relx=0.40, rely=0.21, relwidth=0.38, relheight=0.66)
+
+        self.frame_deep = Frame(self.root)
+        self.frame_deep.place(relx=0.79, rely=0.21, relwidth=0.22, relheight=0.66)
 
         self.ip_combobox = ttk.Combobox(frame_ustbolge, values=self.get_saved_ip_addresses())
         self.ip_combobox.pack(padx=10,side=LEFT)
@@ -80,26 +94,24 @@ class SesIletisimArayuzuE:
         self.text_place = tk.Text(frame_altSag,height=10,width=33)
         self.text_place.pack()
 
-        self.text_send_button = tk.Button(frame_altSag, text="Metni gönder",cursor="hand2", command=self.disconnect)
+        self.speech_to_text_button = tk.Button(frame_altSag, text="sesi yazıya dök",cursor="hand2", command=self.baslat_text)
+        self.speech_to_text_button.pack(pady=5)
+
+        self.stop_speech_to_text_button = tk.Button(frame_altSag, text="durdur",cursor="hand2", command=self.stop_speech_to_text)
+        self.stop_speech_to_text_button.pack()
+
+
+        self.text_send_button = tk.Button(frame_altSag, text="yazıyı gönder",cursor="hand2", command=self.yazi_gonder_t)
         self.text_send_button.pack(pady=5)
 
-             
-        
-        
         self.root.bind("<KeyPress>", self.klavye_kontrol)
         self.root.bind("<KeyRelease>", self.klavye_kontrol)
-        
-        
-        
         
         
         p = pyaudio.PyAudio()
         self.stream = None
         self.stop_event = threading.Event()
 
-        self.pencere = tk.Tk()
-        self.pencere.title("hoparlör Çıkışı Değiştirici")
-        self.pencere.geometry("280x300+450+100")
         
 
         self.output_device_list = []
@@ -112,23 +124,23 @@ class SesIletisimArayuzuE:
                     break
         self.output_device_list = tuple(self.output_device_list)
         
-        self.output_device_label = tk.Label(self.pencere, text="Ses Çıkışı:")
+        self.output_device_label = tk.Label(self.frame_deep, text="Ses Çıkışı:")
         self.output_device_label.pack()
 
-        self.output_device_listbox = tk.Listbox(self.pencere, selectmode=tk.SINGLE,height=13,width=30)
-        self.output_device_listbox.pack()
+        self.output_device_listbox = tk.Listbox(self.frame_deep, selectmode=tk.SINGLE,height=13,width=30)
+        self.output_device_listbox.pack(side="top")
         
         for device in self.output_device_list:
             self.output_device_listbox.insert(tk.END, device[1])
 
-        self.select_button = tk.Button(self.pencere, text="Seç", command=self.play_button_clicked,cursor="hand2",activeforeground="red")
+        self.select_button = tk.Button(self.frame_deep, text="Seç", command=self.play_button_clicked,cursor="hand2",activeforeground="red")
         self.select_button.pack()
 
-        """self.stop_button = tk.Button(self.pencere, text="Durdur",cursor="hand2",command=self.stop_button_clicked)
-        self.stop_button.pack()"""
-
+        
+        self.get_local_ip()
         self.root.mainloop()
-        self.pencere.mainloop()
+        
+        
         
                             ##### ********** ######
 
@@ -167,20 +179,33 @@ class SesIletisimArayuzuE:
         p.terminate()
 
         self.client_socket.close()
-        self.server_socket.close()
+        #self.server_socket.close()
 
     def disconnect(self):
+            
         self.is_running = False  # Gönderim ve ses alma işlemlerini durdur
         self.is_running_recv = False
         self.contunie = False
         
         if self.client_socket is not None:
-            self.client_socket.shutdown(socket.SHUT_RDWR)
-            self.client_socket.close()
+            try:
+                self.client_socket.shutdown(socket.SHUT_RDWR)
+                self.client_socket.close()
+            except (OSError, AttributeError):
+                pass
+           
+        
         if self.server_socket is not None:
-            self.server_socket.close()
+            try:
+                self.server_socket.shutdown(socket.SHUT_RDWR)
+                self.server_socket.close()
+            except (OSError, AttributeError):
+                pass
+            
         
         self.root.quit()
+
+
         
 
   
@@ -209,15 +234,20 @@ class SesIletisimArayuzuE:
                         input=True,
                         frames_per_buffer=self.CHUNK)
         
-        Esik_deger = 10 
-        while True:
-
+        Esik_deger = 10
+        
+        while self.is_running:
+            self.connect()
+            
+            
             data = stream.read(self.CHUNK)
             audio_data = np.frombuffer(data, dtype=np.int16)
             if np.abs(audio_data).mean() > Esik_deger: # mikrofona gelen ses verilerin MUTLAK değerinin ortalamasını alarak ses şiddetini buluyoruz. ortalama, eşik değerinden yüksekse ses iletim devam ediyor.
                 mikrofon = True
+                
             else:
-                mikrofon = False
+                mikrofon  = False
+                
             
             
             try:
@@ -230,26 +260,19 @@ class SesIletisimArayuzuE:
 
                     if not self.is_running:
                             return
-            except Exception as e:
-                if self.client_socket is not None and self.contunie == True:
-                    print("bir hata oldu : ",e)
-                    print("yeniden bağlanılmaya çalışılıyor...")
-                    self.client_socket.close()
-                    self.client_socket, address = self.server_socket.accept()
-                    print(f"* {address} adresinden yeni bir bağlantı alındı.")
-
-                    
-                    data = stream.read(self.CHUNK)
-                    audio_data = np.frombuffer(data, dtype=np.int16)
-                
-                    converted_data= signal.resample(audio_data,int(len(audio_data)*self.PITCH_SHIFT_FACTOR))*1.4
-                    converted_data = converted_data.astype(np.int16)
-                    converted_data_bytes = converted_data.tobytes()
-                    self.client_socket.send(converted_data_bytes)
-                    
+          
             
-                    if not self.is_running:
-                        return
+            except Exception as e:
+                    if self.client_socket is not None and self.contunie == True:
+                        print("bir hata oldu : ",e)
+                        print("yeniden bağlanılmaya çalışılıyor...")
+                        self.client_socket.close()
+                        self.client_socket, address = self.server_socket.accept()
+                        print(f"* {address} adresinden yeni bir bağlantı alındı.")
+        
+
+         
+                    
 
 
         
@@ -257,6 +280,7 @@ class SesIletisimArayuzuE:
         stream.close()
         self.client_socket.close()
         p.terminate()
+
 
     
     def get_sound_fonc(self):
@@ -267,8 +291,16 @@ class SesIletisimArayuzuE:
             rate=self.RATE,
             output=True
         )
-        
+
         while self.is_running_recv:
+            # İnternet bağlantısını kontrol et
+            check_net = self.connect()
+            if not check_net:
+                # Eğer bağlantı yoksa uygun uyarıyı ver ve bir süre bekle
+                print("İnternet bağlantısı yok! Uyarı: Bağlantı kopmuş olabilir.")
+                time.sleep(3)
+                continue
+
             try:
                 data = self.client_socket.recv(self.CHUNK)
                 if not data:
@@ -276,45 +308,38 @@ class SesIletisimArayuzuE:
                 if self.event.is_set() and self.contunie:
                     self.play_server_output(data)
                 else:
-                    print("ses al devam tuşuna bas")
+                    print("Ses al devam tuşuna bas")
             except Exception as e:
                 if self.client_socket is not None and self.contunie:
                     print("Beklenmeyen bir hata oluştu:", e)
                     print("Yeni bir bağlantı bekleniyor...")
                     self.client_socket.close()
-                    self.client_socket = None  # client_socket nesnesini None olarak ayarlayın
-                    
-                    # Yeni bir bağlantı almak için yeni bir server_socket nesnesi oluşturun
-                    self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    self.server_socket.bind((self.HOST, self.PORT))
-                    self.server_socket.listen(1)
-                    print(f"* Bağlantı için {self.HOST}:{self.PORT} dinleniyor...")
-                    
                     self.client_socket, address = self.server_socket.accept()
                     print(f"* {address} adresinden yeni bir bağlantı alındı.")
-        
+            
+
         stream.stop_stream()
         stream.close()
         self.client_socket.close()
         p.terminate()
+        
+        
+
                 
             
         
-
-        """stream.stop_stream()
-            stream.close()
-            self.client_socket.close()
-            p.terminate()"""
-
-
-                            ##### ********** ######        
+                    
 
     def get_local_ip(self):
         
             #  local IP adresini alıyoruz
             local_ip = socket.gethostbyname(socket.gethostname())
             self.ip_combobox.insert(tk.END,local_ip)
-        
+            
+                
+    
+
+                            ##### ********** ######        
     def start_get_sound(self):
         self.contunie = True
         
@@ -337,21 +362,23 @@ class SesIletisimArayuzuE:
         
                             ##### ********** ######
     def start(self):
-        if not self.is_running:
+        if  self.is_running !=True:
             self.is_running = True
             threading.Thread(target=self.send_audio).start()
                             ##### ********** ######
     def stop(self):
         
             self.is_running = False
+            
 
                             ##### ********** ######
     def klavye_kontrol(self, event):
         if event.char == 'q':
             if event.type == tk.EventType.KeyPress:
-                self.start()
+                self.contunie = True
             elif event.type == tk.EventType.KeyRelease:
-                self.stop()
+                self.contunie = False
+
                              ##### ********** ###### 
     def set_output_stream(self, output_device):
         p = pyaudio.PyAudio()
@@ -396,11 +423,91 @@ class SesIletisimArayuzuE:
 
 
     def connect(self):
-        try:
-            request.urlopen('http://google.com', timeout=1)
-            return True
-        except request.URLError as err: 
-            return False
+        
+
+        while True:
+            try:
+                # www.google.com adresine bağlanmayı dene (80 ve 443 portları genellikle açıktır)
+                socket.gethostbyname("www.google.com")
+                if not self.internet_baglantisi:
+                    print("İnternet bağlantısı aktif.")
+                    self.internet_baglantisi = True
+                return True
+            except socket.gaierror:
+                if self.internet_baglantisi:
+                    print("İnternet bağlantısı yok! Uyarı: Bağlantı kopmuş olabilir.")
+                    self.internet_baglantisi = False
+                return False
+
+
+    def sesi_anlik_yaziya_cevir(self):
+        while self.flag:
+
+            
+            r = sr.Recognizer()
+
+            with sr.Microphone() as source:
+                print("Dinleme başladı. Konuşun...")
+
+                while self.flag:
+
+                    audio = r.listen(source)
+
+                    try:
+                            text = r.recognize_google(audio, language="tr-TR")
+                            if text:
+                                
+                                self.text_place.insert(tk.END,text+str(". "))
+                    except sr.UnknownValueError:
+                            print("Ses anlaşılamadı.")
+                    except sr.RequestError as e:
+                            print("İstek başarısız oldu; {0}".format(e))
+
+        print("mikrofon kapandı.")
+
+    def baslat_text(self):
+        
+            self.flag = True
+            threading.Thread(target=self.sesi_anlik_yaziya_cevir).start()
+        
+
+    def stop_speech_to_text(self):
+        #sei yazıya dökme durdur
+        self.flag = False
+    
+    def yazi_gonder(self):
+        if not self.metin_flag:
+            server_socket_text = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server_socket_text.bind((self.HOST, self.PORT_TEXT))
+            server_socket_text.listen(1)
+            print(f"* Metin için {self.HOST}:{self.PORT_TEXT} dinleniyor...")
+
+            self.client_socket_text, address = server_socket_text.accept()
+            print(f"* Metin için {address} bağlanıldı.")
+
+            self.metin_flag = True  # Bayrağı True olarak ayarla, böylece tekrardan bağlanyı kurmuyor
+
+            
+
+        metin = self.text_place.get("1.0", tk.END).strip()
+
+        if metin:
+            # Metin verisini ikinci soket üzerinden gönder
+            self.client_socket_text.send(bytes(metin, "utf-8"))
+            self.text_place.delete("1.0",tk.END)
+            print("Metin gönderildi:", metin)
+        else:
+            print("Boş metin göndermeye çalışıyorsunuz!!!")
+
+        
+
+
+    def yazi_gonder_t(self):
+        """if not self.metin_flag:
+            self.metin_flag = True"""
+        t1 = threading.Thread(target=self.yazi_gonder)
+        t1.start()
+        
 
                             ##### ********** ######
     """def stop_button_clicked(self):
