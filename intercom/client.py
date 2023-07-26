@@ -5,12 +5,13 @@ import threading
 import pyaudio
 import numpy as np
 import socket
-import subprocess
 import nmap
 import tkinter as tk
 import os
 from gtts import gTTS
 import pygame
+from responsive_voice import ResponsiveVoice
+
 class Client:
     def __init__(self):
         self.CHUNK = 512 
@@ -24,7 +25,7 @@ class Client:
         self.contunie = True
         self.is_running = False
         self.is_running_recv = True
-        
+        self.is_reading = False
         self.thread = None
 
         self.event = threading.Event()
@@ -63,7 +64,7 @@ class Client:
         #self.metin_al_f = tk.Button(frame_alt, text="metin al",command=self.receive_text_thread, state="disabled")
         #self.metin_al_f.pack()
 
-        self.read_text_button = tk.Button(frame_alt, text="metin oku",command=self.read_text_thread)
+        self.read_text_button = tk.Button(frame_alt, text="metin oku (erkek)",command=self.oku_f)
         self.read_text_button.pack()
 
 
@@ -133,6 +134,19 @@ class Client:
         
             self.thread = threading.Thread(target=self.read_text)
             self.thread.start()
+
+    def oku_f(self):
+        if not self.is_reading:
+            self.is_reading = True
+            metin = self.metin_yeri.get("1.0", tk.END)
+            threading.Thread(target=self.oku_metni, args=(metin,)).start()
+
+    def oku_metni(self, metin):
+        engine = ResponsiveVoice()
+        engine = ResponsiveVoice(lang=ResponsiveVoice.TURKISH)
+        engine.say(metin, gender=ResponsiveVoice.MALE, rate=0.47, pitch=0.36, vol=1)
+        self.metin_yeri.delete("1.0",tk.END)
+        self.is_reading = False
 
     def scan_ip(self):
         nm = nmap.PortScanner()
