@@ -1,16 +1,19 @@
+
 from tkinter import *
 import tkinter.ttk as ttk
 import threading
 import pyaudio
 import numpy as np
 import socket
-
+import subprocess
 import nmap
 import tkinter as tk
-
+import os
+from gtts import gTTS
+import pygame
 class Client:
     def __init__(self):
-        self.CHUNK = 512
+        self.CHUNK = 512 
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 22050
@@ -21,6 +24,8 @@ class Client:
         self.contunie = True
         self.is_running = False
         self.is_running_recv = True
+        
+        self.thread = None
 
         self.event = threading.Event()
 
@@ -55,8 +60,12 @@ class Client:
         
         self.metin_yeri = tk.Text(frame_alt,height=8,width=45)
         self.metin_yeri.pack()
-        self.metin_al_f = tk.Button(frame_alt, text="metin al",command=self.receive_text_thread, state="disabled")
-        self.metin_al_f.pack()
+        #self.metin_al_f = tk.Button(frame_alt, text="metin al",command=self.receive_text_thread, state="disabled")
+        #self.metin_al_f.pack()
+
+        self.read_text_button = tk.Button(frame_alt, text="metin oku",command=self.read_text_thread)
+        self.read_text_button.pack()
+
 
         self.ip_scan_button = Button(frame_sol, text="IP TARA",command= self.scan_ip)
         self.ip_scan_button.pack()
@@ -104,9 +113,6 @@ class Client:
                 self.metin_yeri.see(tk.END)  # Scrollbar ile otomatik olarak en sona inmesini sağlar
                 self.root.update()  # GUI'yi güncellemek için root penceresini yeniler
 
-                # Handle audio data here if needed
-                # elif data.startswith(b"AUDIO:"):
-                #     ... (handle audio data)
 
             except ConnectionResetError:
                 break
@@ -115,6 +121,18 @@ class Client:
     def receive_text_thread(self):
         ti1 = threading.Thread(target=self.receive_text)
         ti1.start()
+
+    def read_text(self):
+        metin = self.metin_yeri.get("1.0", "end-1c")
+        ses = gTTS(text=metin, lang="tr",slow= False)
+        ses.save("Metin_ses.wav")
+        os.system("start Metin_ses.wav")
+        self.metin_yeri.delete("1.0",tk.END)   
+        
+    def read_text_thread(self):
+        
+            self.thread = threading.Thread(target=self.read_text)
+            self.thread.start()
 
     def scan_ip(self):
         nm = nmap.PortScanner()
@@ -145,6 +163,7 @@ class Client:
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.connect((self.HOST, self.PORT))
         print(f"Bağlantı sağlandı: {self.HOST}")
+        self.receive_text_thread()
 
 
 
@@ -152,7 +171,7 @@ class Client:
         self.stop_button.config(state="normal")
         self.get_sound_button.config(state="normal")
         self.disconnect_button.config(state="normal")
-        self.metin_al_f.config(state="normal")
+        #self.metin_al_f.config(state="normal")
 
 
         p = pyaudio.PyAudio()
@@ -233,7 +252,7 @@ class Client:
                 self.server_socket.sendall(audio_data)
 
                 if not self.is_running:
-                    break
+                    return
             except Exception as e:
                 if self.server_socket is not None and self.contunie ==True:
 
