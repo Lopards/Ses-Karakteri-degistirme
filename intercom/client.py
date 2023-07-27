@@ -100,14 +100,13 @@ class Client:
         self.root.mainloop()    
 
 
-    def metni_oku(self):
+def metni_oku(self):
         selected_gender = self.gender_combobox.get()
         if selected_gender =="erkek":
             self.oku_man()
         elif selected_gender =="kadın":
             self.read_text__woman_thread()
 
-    
     def receive_text(self):
            
            
@@ -152,13 +151,14 @@ class Client:
         if not self.is_reading:
             self.is_reading = True
             metin = self.metin_yeri.get("1.0", tk.END)
-            threading.Thread(target=self.oku_metni, args=(metin,)).start()
+            threading.Thread(target=self.oku_metni_erkek, args=(metin,)).start()
 
-    def oku_metni(self, metin):
+    def oku_metni_erkek(self, metin):
+        
         engine = ResponsiveVoice()
         engine = ResponsiveVoice(lang=ResponsiveVoice.TURKISH)
         engine.say(metin, gender=ResponsiveVoice.MALE, rate=0.47, pitch=0.36, vol=1)
-        self.metin_yeri.delete("1.0",tk.END)
+        self.metin_yeri.delete("1.0", tk.END)
         self.is_reading = False
 
     def scan_ip(self):
