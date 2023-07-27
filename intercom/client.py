@@ -64,9 +64,14 @@ class Client:
         #self.metin_al_f = tk.Button(frame_alt, text="metin al",command=self.receive_text_thread, state="disabled")
         #self.metin_al_f.pack()
 
-        self.read_text_button = tk.Button(frame_alt, text="metin oku (erkek)",command=self.oku_f)
-        self.read_text_button.pack()
+        """self.read_text_button = tk.Button(frame_alt, text="metin oku (erkek)",command=self.oku_f)
+        self.read_text_button.pack()"""
+        self.gender_combobox = ttk.Combobox(frame_alt, values=["erkek","kadın"])
+        self.gender_combobox.pack(pady=5)
 
+        self.read_text_button = tk.Button(frame_alt, text="metin oku ",command=self.metni_oku)
+        self.read_text_button.pack(padx=3)
+        
 
         self.ip_scan_button = Button(frame_sol, text="IP TARA",command= self.scan_ip)
         self.ip_scan_button.pack()
@@ -93,6 +98,14 @@ class Client:
         self.disconnect_button.pack()
         self.scan_ip()
         self.root.mainloop()    
+
+
+    def metni_oku(self):
+        selected_gender = self.gender_combobox.get()
+        if selected_gender =="erkek":
+            self.oku_man()
+        elif selected_gender =="kadın":
+            self.read_text__woman_thread()
 
     
     def receive_text(self):
@@ -130,12 +143,12 @@ class Client:
         os.system("start Metin_ses.wav")
         self.metin_yeri.delete("1.0",tk.END)   
         
-    def read_text_thread(self):
+    def read_text__woman_thread(self):
         
             self.thread = threading.Thread(target=self.read_text)
             self.thread.start()
 
-    def oku_f(self):
+    def oku_man(self):
         if not self.is_reading:
             self.is_reading = True
             metin = self.metin_yeri.get("1.0", tk.END)
