@@ -21,8 +21,13 @@ artık istediğiniz filtreyi deneyebilirsiniz
 * Bas konuş özelliği eklendi (q tusu)
 
 
-
+Server
+---
 ![image](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/7871f683-f6d4-437a-a44d-dadf9faba40a)
+---
+Client
+---
+![image](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/f591f4ed-55c1-40fe-b54a-8b25a5d3cf3d)
 
 
 
