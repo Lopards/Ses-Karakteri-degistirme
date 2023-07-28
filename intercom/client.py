@@ -66,7 +66,7 @@ class Client:
 
         """self.read_text_button = tk.Button(frame_alt, text="metin oku (erkek)",command=self.oku_f)
         self.read_text_button.pack()"""
-        self.gender_combobox = ttk.Combobox(frame_alt, values=["erkek","kadın"])
+        self.gender_combobox = ttk.Combobox(frame_alt, values=["erkek","kadın","çocuk","yaşlı erkek","yaşlı kadın"])
         self.gender_combobox.pack(pady=5)
 
         self.read_text_button = tk.Button(frame_alt, text="metin oku ",command=self.metni_oku)
@@ -100,12 +100,19 @@ class Client:
         self.root.mainloop()    
 
 
-def metni_oku(self):
+    def read_text(self):
         selected_gender = self.gender_combobox.get()
         if selected_gender =="erkek":
-            self.oku_man()
+            self.read_man_thread()
+
         elif selected_gender =="kadın":
             self.read_text__woman_thread()
+
+        elif selected_gender == "yaşlı erkek":
+            self.read__old_man_t()
+            
+        elif selected_gender == "yaşlı kadın":
+            self.read__old_woman_t()
 
     def receive_text(self):
            
@@ -135,31 +142,68 @@ def metni_oku(self):
         ti1 = threading.Thread(target=self.receive_text)
         ti1.start()
 
-    def read_text(self):
-        metin = self.metin_yeri.get("1.0", "end-1c")
-        ses = gTTS(text=metin, lang="tr",slow= False)
-        ses.save("Metin_ses.wav")
-        os.system("start Metin_ses.wav")
-        self.metin_yeri.delete("1.0",tk.END)   
+    def read_woman(self,metin):
+        engine = ResponsiveVoice()
+        engine = ResponsiveVoice(lang=ResponsiveVoice.TURKISH)
+        engine.say(metin, gender=ResponsiveVoice.FEMALE, rate=0.47, pitch=0.5, vol=1)
+        self.metin_yeri.delete("1.0", tk.END)
+        self.is_reading = False  
         
     def read_text__woman_thread(self):
         
-            self.thread = threading.Thread(target=self.read_text)
-            self.thread.start()
+            if not self.is_reading:
+                self.is_reading = True
+                metin = self.metin_yeri.get("1.0", tk.END)
+                threading.Thread(target=self.read_woman, args=(metin,)).start()
 
-    def oku_man(self):
+
+
+    def read_man_thread(self):
         if not self.is_reading:
             self.is_reading = True
             metin = self.metin_yeri.get("1.0", tk.END)
-            threading.Thread(target=self.oku_metni_erkek, args=(metin,)).start()
+            threading.Thread(target=self.read_man, args=(metin,)).start()
 
-    def oku_metni_erkek(self, metin):
+    def read_man(self, metin):
         
         engine = ResponsiveVoice()
         engine = ResponsiveVoice(lang=ResponsiveVoice.TURKISH)
         engine.say(metin, gender=ResponsiveVoice.MALE, rate=0.47, pitch=0.36, vol=1)
         self.metin_yeri.delete("1.0", tk.END)
         self.is_reading = False
+
+
+
+    def read_old_man(self,metin):
+        
+        engine = ResponsiveVoice()
+        engine = ResponsiveVoice(lang=ResponsiveVoice.TURKISH)
+        engine.say(metin, gender=ResponsiveVoice.MALE, rate=0.33, pitch=0.25, vol=1)
+        self.metin_yeri.delete("1.0", tk.END)
+        self.is_reading = False
+
+    
+    def read__old_man_t(self):
+        if not self.is_reading:
+            self.is_reading = True
+            metin = self.metin_yeri.get("1.0", tk.END)
+            threading.Thread(target=self.read_old_man, args=(metin,)).start()
+
+
+    def read_old_woman(self,metin):
+        engine = ResponsiveVoice()
+        engine = ResponsiveVoice(lang=ResponsiveVoice.TURKISH)
+        engine.say(metin, gender=ResponsiveVoice.FEMALE, rate=0.36, pitch=0.28, vol=1)
+        self.metin_yeri.delete("1.0", tk.END)
+        self.is_reading = False
+
+    def read__old_woman_t(self):
+        if not self.is_reading:
+            self.is_reading = True
+            metin = self.metin_yeri.get("1.0", tk.END)
+            threading.Thread(target=self.read_old_woman, args=(metin,)).start()
+            
+
 
     def scan_ip(self):
         nm = nmap.PortScanner()
