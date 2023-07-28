@@ -20,6 +20,10 @@ artık istediğiniz filtreyi deneyebilirsiniz
 * sesi anlık olarak erkek-Kadın sesine dönüştüren buton eklendi. 
 * Bas konuş özelliği eklendi (q tusu)
 
+Ana Uygulama
+---
+![image](https://github.com/Lopards/Ses-Karakteri-degistirme/assets/101428835/57bee1f2-3ac3-4bec-bf21-4a5f6fbeb4ae)
+---
 
 Server
 ---
