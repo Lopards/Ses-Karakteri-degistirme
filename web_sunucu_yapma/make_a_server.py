@@ -16,7 +16,7 @@ class server(BaseHTTPRequestHandler):
         global mesaj
         if self.path == '/':
             self.send_response(200) # başarı kodu =200ok
-            self.send_header('Content-type', 'text/html')
+            self.send_header('Content-type', 'text/html; charset=utf-8') # türkçe harfleri göndermek için utf-8
             self.end_headers()
             response = mesaj
             self.wfile.write(response.encode())
