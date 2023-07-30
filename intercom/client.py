@@ -113,6 +113,8 @@ class Client:
             
         elif selected_gender == "yaşlı kadın":
             self.read__old_woman_t()
+        elif selected_gender == "çocuk":
+            self.read_children_thread()
 
     def receive_text(self):
            
@@ -202,6 +204,20 @@ class Client:
             self.is_reading = True
             metin = self.metin_yeri.get("1.0", tk.END)
             threading.Thread(target=self.read_old_woman, args=(metin,)).start()
+
+    def read_children(self,metin):
+        engine = ResponsiveVoice()
+        engine = ResponsiveVoice(lang=ResponsiveVoice.TURKISH)
+        engine.say(metin, gender=ResponsiveVoice.FEMALE, rate=0.45, pitch=0.75, vol=0.5)
+        self.metin_yeri.delete("1.0", tk.END)
+        self.is_reading = False  
+        
+    def read_children_thread(self):
+        
+            if not self.is_reading:
+                self.is_reading = True
+                metin = self.metin_yeri.get("1.0", tk.END)
+                threading.Thread(target=self.read_children, args=(metin,)).start()
             
 
 
