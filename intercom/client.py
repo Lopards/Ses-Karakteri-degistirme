@@ -332,12 +332,21 @@ class Client:
                              input=True,
                              frames_per_buffer=self.CHUNK)
 
-        while self.is_running:
-            try:
-                data = stream.read(self.CHUNK)
-                audio_data = np.frombuffer(data, np.int16)
-                self.server_socket.sendall(audio_data)
+        min_esik_deger = 20
+        max_esik_deger = 800
 
+        while self.is_running:
+
+            try:
+                if np.abs(audio_data).mean() > min_esik_deger and np.abs(audio_data).mean() <max_esik_deger : # mikrofona gelen ses verilerin MUTLAK değerinin ortalamasını alarak ses şiddetini buluyoruz. ortalama, eşik değerinden yüksekse ses iletim devam ediyor.
+                    mikrofon = True
+                
+                else:
+                    mikrofon  = False
+                if self.is_running and mikrofon:
+                    data = stream.read(self.CHUNK)
+                    audio_data = np.frombuffer(data, np.int16)
+                    self.server_socket.sendall(audio_data)
                 if not self.is_running:
                     return
             except Exception as e:
