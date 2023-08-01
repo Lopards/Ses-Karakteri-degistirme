@@ -69,7 +69,7 @@ class Client:
         self.gender_combobox = ttk.Combobox(frame_alt, values=["erkek","kadın","çocuk","yaşlı erkek","yaşlı kadın"])
         self.gender_combobox.pack(pady=5)
 
-        self.read_text_button = tk.Button(frame_alt, text="metin oku ",command=self.metni_oku)
+        self.read_text_button = tk.Button(frame_alt, text="metin oku ",command=self.read_text)
         self.read_text_button.pack(padx=3)
         
 
@@ -332,10 +332,12 @@ class Client:
                              input=True,
                              frames_per_buffer=self.CHUNK)
 
-        min_esik_deger = 20
-        max_esik_deger = 800
+        min_esik_deger = 50
+        max_esik_deger = 850
 
         while self.is_running:
+            data = stream.read(self.CHUNK)
+            audio_data = np.frombuffer(data, np.int16)
 
             try:
                 if np.abs(audio_data).mean() > min_esik_deger and np.abs(audio_data).mean() <max_esik_deger : # mikrofona gelen ses verilerin MUTLAK değerinin ortalamasını alarak ses şiddetini buluyoruz. ortalama, eşik değerinden yüksekse ses iletim devam ediyor.
@@ -343,9 +345,9 @@ class Client:
                 
                 else:
                     mikrofon  = False
+
                 if self.is_running and mikrofon:
-                    data = stream.read(self.CHUNK)
-                    audio_data = np.frombuffer(data, np.int16)
+                    
                     self.server_socket.sendall(audio_data)
                 if not self.is_running:
                     return
