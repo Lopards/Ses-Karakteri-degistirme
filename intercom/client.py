@@ -332,19 +332,31 @@ class Client:
                              input=True,
                              frames_per_buffer=self.CHUNK)
 
-        min_esik_deger = 50
+        min_esik_deger = 100
         max_esik_deger = 850
 
         while self.is_running:
             data = stream.read(self.CHUNK)
             audio_data = np.frombuffer(data, np.int16)
+            
 
             try:
-                if np.abs(audio_data).mean() > min_esik_deger and np.abs(audio_data).mean() <max_esik_deger : # mikrofona gelen ses verilerin MUTLAK değerinin ortalamasını alarak ses şiddetini buluyoruz. ortalama, eşik değerinden yüksekse ses iletim devam ediyor.
+                sound_vol = np.abs(audio_data).mean() # mikrofona gelen ses verilerinin ortalaması alıyor
+                if min_esik_deger < sound_vol < max_esik_deger: # eğer alınan ortalama max ve min esik değerler arasında ise mikrofonu açıyor.
                     mikrofon = True
                 
                 else:
                     mikrofon  = False
+                    """
+                    gelen ses verisi ortalaması max esik değerin üstünde ise sesin seviyesi azzaltılıyor
+                    eğer ses verisi ortalaması min esik değerin altında ise sesin seviyesi arttırılıyor.
+                    """
+                    if sound_vol > max_esik_deger:
+                        audio_data = (audio_data // 3).astype(np.int16) # tam sayıya bölmesi için çift '/' kullandık.
+                        mikrofon = True
+                    elif sound_vol < min_esik_deger:
+                        audio_data = (audio_data * 5).astype(np.int16)
+                        mikrofon = True
 
                 if self.is_running and mikrofon:
                     
@@ -369,6 +381,7 @@ class Client:
         stream.stop_stream()
         stream.close()
         p.terminate()
+
 
     def receive_audio(self):
         p = pyaudio.PyAudio()
